@@ -13,7 +13,7 @@
   <a href="https://t.me/pizzinuapp"><img src="https://img.shields.io/badge/Telegram-@pizzinuapp-26A5E4?logo=telegram&amp;logoColor=white" alt="Telegram"></a>
 </p>
 
-<p align="center"><img src="docs/images/desktop.png" width="820" alt="Pizzinu: pizzini sulla scrivania del Mac"></p>
+<p align="center"><img src="docs/images/hero.png" width="820" alt="Pizzinu: pizzini sulla scrivania del Mac"></p>
 
 **Post-it digitali per macOS.** Pizzinu mostra ogni nota come un vero foglietto adesivo
 appoggiato sulla scrivania: finestre flottanti indipendenti, carta disegnata in forma vettoriale
@@ -90,6 +90,10 @@ senza connessioni remote.
 - **Avvio automatico all'accesso** opzionale (`SMAppService`). **Interfaccia in italiano.**
 
 ## Immagini
+
+**Ogni nota è un vero foglietto** sulla scrivania: lo trascini, ci scrivi, lo fissi con la puntina.
+
+<p align="center"><img src="docs/images/desktop.png" width="820" alt="Pizzinu: pizzini sulla scrivania del Mac"></p>
 
 **13 temi di carta**, più il vetro Liquid Glass di sistema su macOS 26. Le note nuove ne ricevono uno a caso.
 

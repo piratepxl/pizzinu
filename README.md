@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/desktop.png" width="820" alt="Pizzinu sticky notes on a Mac desktop">
+  <img src="docs/images/hero.png" width="820" alt="Pizzinu sticky notes on a Mac desktop">
 </p>
 
 *Pizzinu* (Sicilian for "pizzino": a small folded note) puts every note on your desktop as a
@@ -66,6 +66,10 @@ stay on your Mac, and are always one click away from the menu bar.
   dependencies.
 
 ## Screenshots
+
+**Every note is a real sheet of paper** on your desktop: drag it, write on it, pin it.
+
+<p align="center"><img src="docs/images/desktop.png" width="820" alt="Pizzinu sticky notes on a Mac desktop"></p>
 
 **13 paper themes**, plus system Liquid Glass on macOS 26. New notes get a random one.
 
