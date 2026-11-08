@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 — 2026-11
+
+- Automatic updates: once a day Pizzinu checks GitHub for a new version and shows
+  what's new; "Update and restart" downloads it, checks its Ed25519 signature,
+  replaces the app and reopens it. Can be turned off in Settings ▸ Updates.
+- "Check for updates…" in the app menu and in the menu bar icon menu.
+
 ## 1.0.0 — 2026-11
 
 First public release.

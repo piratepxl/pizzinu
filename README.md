@@ -61,6 +61,8 @@ stay on your Mac, and are always one click away from the menu bar.
 - **14 paper themes**, assigned at random to new notes, including the system **Liquid Glass**
   (macOS 26), 12 named colours plus a custom one, and per-note fonts.
 - **Archive** as a board or a list, with search, sorting, archive and a recoverable trash.
+- **Automatic updates.** Once a day Pizzinu checks for a new version and shows what is new;
+  one click downloads it, verifies its signature, replaces the app and reopens it.
 - **Markdown import/export:** one `.md` file per note, readable in Obsidian or any editor.
 - **Light:** about 25 MB of memory at rest and 0 % CPU. Pure AppKit + SwiftUI, no
   dependencies.
@@ -152,9 +154,13 @@ More in [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Privacy
 
-Pizzinu never connects to the internet. Notes live in
+Notes live in
 `~/Library/Application Support/Pizzinu` (folder readable only by your user), in a SQLite
-database with secure delete enabled. Nothing is collected or sent anywhere.
+database with secure delete enabled. No note content or personal data is ever collected or sent.
+
+The only connection Pizzinu makes is a daily check for new versions on GitHub
+(`api.github.com`): an anonymous request, which you can turn off in Settings ▸ Updates.
+An update is installed only if its Ed25519 signature matches the key built into the app.
 
 ## Documentation
 

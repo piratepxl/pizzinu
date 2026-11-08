@@ -71,6 +71,9 @@ esiste soltanto nel piano.
 
 ## 5. Scelte consapevoli
 
-- Nessun aggiornamento automatico, telemetria o invio di contenuti.
+- Nessuna telemetria e nessun invio di contenuti. L'unica connessione è il controllo giornaliero
+  degli aggiornamenti su GitHub (disattivabile); si installano solo zip con firma Ed25519 valida.
+- L'aggiornamento automatico sostituisce l'app solo se la sua cartella è scrivibile (di norma
+  Applicazioni lo è per un amministratore) e se l'app non gira «traslocata» da Download.
 - Nessun permesso speciale: niente Accessibilità, niente registrazione dello schermo, niente
   notifiche.

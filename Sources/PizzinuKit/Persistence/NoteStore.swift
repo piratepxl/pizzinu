@@ -11,6 +11,11 @@ import Foundation
 /// Percorsi usati dall'applicazione.
 public enum PizzinuPaths {
     public static var applicationSupport: URL {
+        // Solo per le prove: un'altra cartella dei dati, così una copia di prova
+        // dell'app non tocca mai l'archivio vero dell'utente.
+        if let override = ProcessInfo.processInfo.environment["PIZZINU_DATA_DIR"], !override.isEmpty {
+            return URL(fileURLWithPath: override, isDirectory: true)
+        }
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
         return base.appendingPathComponent("Pizzinu", isDirectory: true)

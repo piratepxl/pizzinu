@@ -25,9 +25,10 @@ struct SettingsView: View {
             quickSection
             storageSection
             systemSection
+            updatesSection
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 600)
+        .frame(width: 520, height: 640)
         .onAppear { fontOptions = FontLibrary.reload() }
     }
 
@@ -149,6 +150,24 @@ struct SettingsView: View {
                 Text(launchAtLoginError)
                     .font(.caption)
                     .foregroundStyle(.red)
+            }
+        }
+    }
+
+    private var updatesSection: some View {
+        Section("Aggiornamenti") {
+            Toggle("Controlla automaticamente gli aggiornamenti", isOn: binding(\.checksForUpdates))
+            Text("Una volta al giorno Pizzinu chiede a GitHub se c'è una versione nuova. È la sua unica connessione a Internet e non invia nessun dato personale né il contenuto delle note.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            LabeledContent("Versione installata") {
+                HStack(spacing: 8) {
+                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")
+                        .foregroundStyle(.secondary)
+                    Button("Controlla ora") {
+                        NSApp.sendAction(#selector(AppDelegate.checkForUpdates(_:)), to: nil, from: nil)
+                    }
+                }
             }
         }
     }

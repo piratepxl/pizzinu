@@ -33,6 +33,11 @@ enum AppMenuBuilder {
         menu.addItem(withTitle: "Informazioni su Pizzinu",
                      action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
                      keyEquivalent: "")
+        let updates = NSMenuItem(title: "Controlla aggiornamenti…",
+                                 action: #selector(AppDelegate.checkForUpdates(_:)),
+                                 keyEquivalent: "")
+        updates.target = target
+        menu.addItem(updates)
 
         menu.addItem(.separator())
 
@@ -277,6 +282,7 @@ enum AppMenuBuilder {
 
         menu.addItem(.separator())
 
+        menu.addItem(action(title: "Controlla aggiornamenti…", action: #selector(AppDelegate.checkForUpdates(_:)), key: "", target: target))
         menu.addItem(action(title: "Impostazioni…", action: #selector(AppDelegate.openSettings(_:)), key: "", target: target))
         menu.addItem(action(title: "Esci da Pizzinu", action: #selector(NSApplication.terminate(_:)), key: "", target: nil))
 

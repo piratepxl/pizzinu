@@ -80,6 +80,9 @@ con l'indirizzo noreply di GitHub (configurata nel repository, mai l'email perso
   controllare i file in stage prima di ogni commit.
 - Le release (zip in `dist/`, creato da `Scripts/package_release.sh`) vanno su GitHub Releases,
   non nel repository.
+  `package_release.sh` firma `dist/Pizzinu.zip` con la chiave Ed25519 del Portachiavi
+  (`Scripts/update_key.sh`): senza `Pizzinu.zip.sig` nella release l'aggiornamento automatico
+  non parte. Mai mostrare o committare la chiave privata.
   Caricare sempre anche `dist/Pizzinu.zip` (nome fisso): i pulsanti «Scarica» del sito puntano a
   `releases/latest/download/Pizzinu.zip`. Aggiornare a mano versione e peso dello zip nella
   sezione «Scaricala e aprila» della landing.

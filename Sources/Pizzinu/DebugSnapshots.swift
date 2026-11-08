@@ -66,6 +66,37 @@ enum DebugSnapshots {
         renderArchive(to: directory.appendingPathComponent("archivio.png"), selecting: nil)
         renderArchive(to: directory.appendingPathComponent("archivio-selezione.png"), selecting: 1)
         renderShowcase(in: directory.appendingPathComponent("vetrina", isDirectory: true))
+        renderUpdateWindow(to: directory)
+    }
+
+    /// Finestra dell'aggiornamento: avviso, download in corso ed errore.
+    static func renderUpdateWindow(to directory: URL) {
+        let release = UpdateRelease(version: AppVersion("1.1.0")!, title: "Pizzinu 1.1.0",
+                                    notes: "Novità\n• Aggiornamenti automatici: Pizzinu controlla da solo se c'è una versione nuova e si aggiorna con un clic.\n• Download diretto dal sito.\n\nCorrezioni\n• Piccoli ritocchi.",
+                                    pageURL: URL(string: "https://github.com/piratepxl/pizzinu/releases")!,
+                                    zipURL: URL(string: "https://example.com/Pizzinu.zip")!, zipSize: 1_900_000,
+                                    signatureURL: URL(string: "https://example.com/Pizzinu.zip.sig")!)
+        let updater = Updater()
+        let states: [(String, Updater.Phase)] = [
+            ("aggiornamento.png", .available(release)),
+            ("aggiornamento-download.png", .downloading(release, progress: 0.62)),
+            ("aggiornamento-errore.png", .failed(release, message: "La firma dell'aggiornamento non è valida, quindi non l'ho installato. Può essere un download rovinato: riprova più tardi.")),
+        ]
+        for (name, phase) in states {
+            updater.preview(phase)
+            let host = NSHostingView(rootView: UpdateView(updater: updater))
+            host.frame = NSRect(origin: .zero, size: host.fittingSize)
+            let window = NSWindow(contentRect: host.frame, styleMask: [.titled], backing: .buffered, defer: false)
+            window.contentView = host
+            window.orderFrontRegardless()
+            host.layoutSubtreeIfNeeded()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+            if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+                host.cacheDisplay(in: host.bounds, to: rep)
+                try? rep.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent(name))
+            }
+            window.close()
+        }
     }
 
     /// Foglietti con testi diversi e senza comandi, per comporre le immagini del README

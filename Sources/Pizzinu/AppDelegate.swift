@@ -31,6 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
     private var hotKey: GlobalHotKey?
     private var dropCatcher: DesktopDropCatcher?
     private var preferencesObserver: AnyCancellable?
+    private let updater = Updater()
+    private var updateWindowController: UpdateWindowController?
 
     // MARK: - Ciclo di vita
 
@@ -39,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if runUpdateTestModesIfRequested() { return }
         if ProcessInfo.processInfo.environment["PIZZINU_CHECK_SECRET"] != nil {
             let ok = DebugSnapshots.checkSecretCycle()
             exit(ok ? 0 : 1)
@@ -63,6 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
                 .sink { [weak self] preferences in
                     MainActor.assumeIsolated { self?.applyIntegrations(preferences) }
                 }
+            configureUpdater(manager)
             if !manager.preferences.hasCompletedFirstRun {
                 manager.updatePreferences { $0.hasCompletedFirstRun = true }
                 presentMainWindow()
@@ -88,6 +92,62 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
         guard let manager else { return true }
         NSApp.activate(ignoringOtherApps: true)
         manager.createNote(kind: .text)
+        return true
+    }
+
+    // MARK: - Aggiornamenti
+
+    private func configureUpdater(_ manager: NoteManager) {
+        updater.preferences = { [weak manager] in manager?.preferences ?? .default }
+        updater.skipVersion = { [weak manager] version in
+            manager?.updatePreferences { $0.skippedUpdateVersion = version }
+        }
+        updater.present = { [weak self] in self?.showUpdateWindow() }
+        updater.startAutomaticChecks()
+    }
+
+    private func showUpdateWindow() {
+        if updateWindowController == nil {
+            updateWindowController = UpdateWindowController(updater: updater)
+        }
+        updateWindowController?.show()
+    }
+
+    @objc func checkForUpdates(_ sender: Any?) {
+        Task { await updater.check(userInitiated: true) }
+    }
+
+    /// Modalità di prova dell'aggiornamento, senza aprire l'archivio delle note:
+    /// - `PIZZINU_UPDATE_REPORT=<file>`: scrive la propria versione nel file ed esce
+    ///   (la usa l'app riaperta dopo l'aggiornamento);
+    /// - `PIZZINU_UPDATE_SELFTEST=<file>` con `PIZZINU_UPDATE_FEED=<url>`: controlla,
+    ///   installa senza chiedere e riapre l'app con `PIZZINU_UPDATE_REPORT=<file>`.
+    private func runUpdateTestModesIfRequested() -> Bool {
+        let environment = ProcessInfo.processInfo.environment
+        if let report = environment["PIZZINU_UPDATE_REPORT"] {
+            let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+            try? "\(version) \(Bundle.main.bundlePath)\n".write(toFile: report, atomically: true, encoding: .utf8)
+            exit(0)
+        }
+        guard let report = environment["PIZZINU_UPDATE_SELFTEST"] else { return false }
+        updater.relaunchEnvironment = ["PIZZINU_UPDATE_REPORT=\(report)"]
+        updater.present = { [updater] in
+            guard case .available(let release) = updater.phase else { return }
+            Task { @MainActor in
+                await updater.install(release)
+                if case .failed(_, let message) = updater.phase {
+                    print("Aggiornamento non riuscito: \(message)")
+                    exit(1)
+                }
+            }
+        }
+        Task { @MainActor [updater] in
+            await updater.check(userInitiated: false)
+            if case .idle = updater.phase {
+                print("Nessun aggiornamento trovato")
+                exit(2)
+            }
+        }
         return true
     }
 

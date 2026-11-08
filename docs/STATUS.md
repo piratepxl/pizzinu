@@ -3,7 +3,7 @@
 Documento di **handoff**: dove si trova Pizzinu, cosa è cambiato di recente, le regole da non
 rompere e cosa resta aperto. Serve a riprendere il lavoro senza ricostruire il contesto dal codice.
 
-**Ultimo aggiornamento:** 8 novembre 2026.
+**Ultimo aggiornamento:** 8 novembre 2026 (pomeriggio).
 
 ---
 
@@ -265,6 +265,30 @@ rompere e cosa resta aperto. Serve a riprendere il lavoro senza ricostruire il c
 - Cartelle duplicate di Nextcloud (`ImportExport 2`, `Models 2`, …) riordinate.
 
 ---
+
+## 2.14 Aggiornamento automatico (versione 1.1.0, 8 novembre 2026)
+
+- [Updater.swift](../Sources/Pizzinu/Updater.swift) + [UpdateWindow.swift](../Sources/Pizzinu/UpdateWindow.swift);
+  regole pure in [PizzinuKit/Updates/Update.swift](../Sources/PizzinuKit/Updates/Update.swift) (30 verifiche nel self-test).
+- Controllo 8 s dopo l'avvio e poi ogni ora se è passato un giorno (`UpdateSchedule`), su
+  `api.github.com/repos/piratepxl/pizzinu/releases/latest`. Interruttore
+  `AppPreferences.checksForUpdates` (attivo), versione saltata in `skippedUpdateVersion`. Voce
+  «Controlla aggiornamenti…» nel menu dell'app e in quello dell'icona.
+- Installazione: scarica `Pizzinu.zip` + `Pizzinu.zip.sig`, verifica la firma **Ed25519** con la
+  chiave pubblica in `Updater.publicKey`, estrae con `ditto` in una cartella nascosta accanto
+  all'app, controlla identificativo e versione, poi uno script `sh` attende la chiusura, scambia
+  le app (ripristina la vecchia se lo scambio fallisce), la riapre con `open -n` e pulisce.
+- Chiave privata **solo nel Portachiavi** («Pizzinu update signing key»), gestita da
+  `Scripts/update_key.sh` (generate / public / sign / export / import). `package_release.sh`
+  firma da solo e controlla che la chiave corrisponda a quella dell'app. **Va copiata in un
+  gestore di password**: se si perde, le versioni installate non si aggiornano più da sole.
+- Prove senza toccare app e dati veri: `PIZZINU_DATA_DIR` (cartella dati alternativa),
+  `PIZZINU_UPDATE_FEED` (release finta), `PIZZINU_UPDATE_SELFTEST=<file>` (installa senza
+  chiedere e riapre con `PIZZINU_UPDATE_REPORT`). Provati: aggiornamento 1.0.0 → 9.9.9 completo,
+  zip manomesso, firma sbagliata, versione diversa da quella annunciata (tutti rifiutati, nessun
+  avanzo). Istantanee della finestra: `aggiornamento*.png`.
+- **Non verificato**: la finestra con un clic vero e l'aggiornamento da GitHub reale (servirà la
+  release successiva alla 1.1.0).
 
 ## 2.13 Pubblicazione (8 novembre 2026)
 

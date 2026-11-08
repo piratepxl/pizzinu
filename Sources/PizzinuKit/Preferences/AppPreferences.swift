@@ -7,7 +7,7 @@
 //
 //  Restano soltanto le scelte che cambiano davvero qualcosa: tema
 //  dell'interfaccia, carattere, ombra, dimensione delle note nuove, Spaces,
-//  cestino, Dock, scorciatoia globale. Le vecchie voci (tema predefinito,
+//  cestino, Dock, scorciatoia globale, controllo degli aggiornamenti. Le vecchie voci (tema predefinito,
 //  dimensione del carattere, ritardo di salvataggio, ingrandimento del testo)
 //  non avevano effetto e sono state tolte: se presenti in un archivio salvato
 //  vengono semplicemente ignorate in lettura.
@@ -53,6 +53,10 @@ public struct AppPreferences: Codable, Sendable, Equatable {
     public var desktopDropEnabled: Bool
     /// Indica se la finestra principale è già stata mostrata almeno una volta.
     public var hasCompletedFirstRun: Bool
+    /// Controlla una volta al giorno se su GitHub c'è una versione più nuova.
+    public var checksForUpdates: Bool
+    /// Versione che l'utente ha scelto di saltare: non viene riproposta.
+    public var skippedUpdateVersion: String?
 
     /// Ritardo del salvataggio automatico dopo l'ultima digitazione. Non è più
     /// una scelta dell'utente: è un valore fisso, abbastanza breve da non
@@ -74,7 +78,9 @@ public struct AppPreferences: Codable, Sendable, Equatable {
                 showsDockIcon: Bool = false,
                 globalHotKeyEnabled: Bool = true,
                 desktopDropEnabled: Bool = true,
-                hasCompletedFirstRun: Bool = false) {
+                hasCompletedFirstRun: Bool = false,
+                checksForUpdates: Bool = true,
+                skippedUpdateVersion: String? = nil) {
         self.noteFontName = noteFontName
         self.defaultPaperWidth = defaultPaperWidth
         self.defaultPaperHeight = defaultPaperHeight
@@ -86,6 +92,8 @@ public struct AppPreferences: Codable, Sendable, Equatable {
         self.globalHotKeyEnabled = globalHotKeyEnabled
         self.desktopDropEnabled = desktopDropEnabled
         self.hasCompletedFirstRun = hasCompletedFirstRun
+        self.checksForUpdates = checksForUpdates
+        self.skippedUpdateVersion = skippedUpdateVersion
     }
 
     /// Decodifica tollerante: ogni campo mancante riceve il valore predefinito,
@@ -104,6 +112,8 @@ public struct AppPreferences: Codable, Sendable, Equatable {
         globalHotKeyEnabled = try container.decodeIfPresent(Bool.self, forKey: .globalHotKeyEnabled) ?? fallback.globalHotKeyEnabled
         desktopDropEnabled = try container.decodeIfPresent(Bool.self, forKey: .desktopDropEnabled) ?? fallback.desktopDropEnabled
         hasCompletedFirstRun = try container.decodeIfPresent(Bool.self, forKey: .hasCompletedFirstRun) ?? fallback.hasCompletedFirstRun
+        checksForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checksForUpdates) ?? fallback.checksForUpdates
+        skippedUpdateVersion = try container.decodeIfPresent(String.self, forKey: .skippedUpdateVersion)
     }
 
     /// Corregge i valori fuori intervallo provenienti da un file di configurazione.

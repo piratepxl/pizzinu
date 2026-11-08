@@ -21,8 +21,8 @@ con volume e ombre, salvataggio locale automatico e un'icona nella barra dei men
 portata di mano.
 
 L'applicazione è nativa (AppKit + SwiftUI, nessuna dipendenza esterna), **leggera** (~25 MB
-di memoria a riposo, 0 % di CPU) e **local-first**: le note restano su questo Mac, senza account e
-senza connessioni remote.
+di memoria a riposo, 0 % di CPU) e **local-first**: le note restano su questo Mac, senza account. L'unica
+connessione è il controllo giornaliero degli aggiornamenti su GitHub, anonimo e disattivabile.
 
 ---
 
@@ -82,6 +82,9 @@ senza connessioni remote.
 - **Archivio a bacheca o a elenco** (a scelta): le note come foglietti su un piano puntinato o in un
   elenco compatto, con ricerca, ordinamento,
   **archiviazione**, **cestino recuperabile** e svuotamento automatico opzionale.
+- **Aggiornamenti automatici.** Una volta al giorno Pizzinu controlla se c'è una versione nuova e
+  mostra le novità; con un clic la scarica, ne verifica la firma, sostituisce l'app e la riapre.
+  Disattivabile in Impostazioni ▸ Aggiornamenti.
 - **Importazione ed esportazione in Markdown**: un file `.md` per nota, con un piccolo blocco
   di metadati che conserva colore, tema, puntina e promemoria (formato in
   [docs/MARKDOWN_FORMAT.md](docs/MARKDOWN_FORMAT.md)). Ogni pizzino si apre anche in Obsidian o

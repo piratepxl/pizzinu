@@ -905,6 +905,73 @@ do {
                "dopo la reimportazione la stessa password lo riapre")
 }
 
+// MARK: - Aggiornamenti
+
+section("Aggiornamenti")
+do {
+    // Versioni
+    check(AppVersion("1.0.0")! < AppVersion("1.1.0")!, "1.0.0 è più vecchia di 1.1.0")
+    check(AppVersion("1.9.0")! < AppVersion("1.10.0")!, "1.9 è più vecchia di 1.10 (confronto numerico, non alfabetico)")
+    checkEqual(AppVersion("v1.2")!, AppVersion("1.2.0")!, "«v1.2» e «1.2.0» sono la stessa versione")
+    check(!(AppVersion("1.2.0")! < AppVersion("1.2")!), "1.2.0 non è più nuova di 1.2")
+    checkEqual(AppVersion("2.0.0-beta")?.description, "2.0.0", "il suffisso «-beta» viene ignorato")
+    check(AppVersion("") == nil && AppVersion("abc") == nil && AppVersion("1..2") == nil, "le versioni malformate sono rifiutate")
+
+    // Quando proporre l'aggiornamento
+    let current = AppVersion("1.0.0")!, newer = AppVersion("1.1.0")!
+    check(UpdateSchedule.shouldOffer(newer, current: current, skipped: nil), "una versione più nuova viene proposta")
+    check(!UpdateSchedule.shouldOffer(current, current: current, skipped: nil), "la stessa versione non viene proposta")
+    check(!UpdateSchedule.shouldOffer(AppVersion("0.9")!, current: current, skipped: nil), "una versione più vecchia non viene proposta")
+    check(!UpdateSchedule.shouldOffer(newer, current: current, skipped: "v1.1.0"), "una versione saltata non viene riproposta")
+    check(UpdateSchedule.shouldOffer(AppVersion("1.2.0")!, current: current, skipped: "1.1.0"), "la versione dopo quella saltata viene proposta")
+    let now = Date()
+    check(UpdateSchedule.isDue(lastCheck: nil, now: now), "senza controlli precedenti si controlla subito")
+    check(!UpdateSchedule.isDue(lastCheck: now.addingTimeInterval(-3600), now: now), "dopo un'ora non si ricontrolla")
+    check(UpdateSchedule.isDue(lastCheck: now.addingTimeInterval(-90_000), now: now), "dopo un giorno si ricontrolla")
+    check(UpdateSchedule.isDue(lastCheck: now.addingTimeInterval(86_400 * 3), now: now), "un orologio tornato indietro non blocca i controlli")
+
+    // Risposta di GitHub
+    func feed(tag: String = "v1.1.0", assets: [String] = ["Pizzinu.zip", "Pizzinu.zip.sig"], prerelease: Bool = false) -> Data {
+        let list: [[String: Any]] = assets.map { ["name": $0, "browser_download_url": "https://example.com/" + $0, "size": 1_855_076] }
+        let payload: [String: Any] = [
+            "tag_name": tag, "name": "Pizzinu 1.1.0",
+            "body": "## Novità\r\n- **Aggiornamenti** automatici\r\n\r\nSHA-256: `abc`",
+            "html_url": "https://github.com/piratepxl/pizzinu/releases/tag/" + tag,
+            "draft": false, "prerelease": prerelease, "assets": list,
+        ]
+        return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
+    }
+    let release = try UpdateRelease.fromGitHub(feed())
+    checkEqual(release.version, AppVersion("1.1.0")!, "la versione si legge dal tag")
+    checkEqual(release.zipURL.lastPathComponent, "Pizzinu.zip", "lo zip è quello con il nome fisso")
+    checkEqual(release.signatureURL.lastPathComponent, "Pizzinu.zip.sig", "la firma è il file .sig")
+    checkEqual(release.zipSize, 1_855_076, "il peso dello zip si legge dalla release")
+    check(release.notes.contains("Aggiornamenti automatici") && !release.notes.contains("**"), "le note sono in testo semplice")
+    check(!release.notes.contains("SHA-256"), "la riga dell'impronta non compare nelle note")
+    do { _ = try UpdateRelease.fromGitHub(feed(assets: ["Pizzinu.zip"])); check(false, "una release senza firma viene rifiutata") }
+    catch UpdateError.missingAsset(let name) { checkEqual(name, "Pizzinu.zip.sig", "una release senza firma viene rifiutata") }
+    do { _ = try UpdateRelease.fromGitHub(feed(prerelease: true)); check(false, "una pre-release non viene proposta") }
+    catch { checkEqual(error as? UpdateError, .malformedFeed, "una pre-release non viene proposta") }
+    do { _ = try UpdateRelease.fromGitHub(Data("<html>503</html>".utf8)); check(false, "una pagina d'errore non è una release") }
+    catch { checkEqual(error as? UpdateError, .malformedFeed, "una pagina d'errore non è una release") }
+
+    // Firma Ed25519
+    let privateKey = Curve25519.Signing.PrivateKey().rawRepresentation.base64EncodedString()
+    let publicKey = try UpdateSignature.publicKey(forPrivateKey: privateKey)
+    let zip = Data((0..<4096).map { UInt8($0 % 251) })
+    let signature = try UpdateSignature.sign(zip, privateKey: privateKey)
+    check(UpdateSignature.isValid(zip, signature: signature, publicKey: publicKey), "uno zip firmato con la chiave giusta è accettato")
+    check(UpdateSignature.isValid(zip, signature: signature + "\n", publicKey: publicKey), "il fine riga nel file .sig non conta")
+    var altered = zip; altered[100] ^= 0x01
+    check(!UpdateSignature.isValid(altered, signature: signature, publicKey: publicKey), "uno zip modificato di un solo bit è rifiutato")
+    let otherKey = try UpdateSignature.publicKey(forPrivateKey: Curve25519.Signing.PrivateKey().rawRepresentation.base64EncodedString())
+    check(!UpdateSignature.isValid(zip, signature: signature, publicKey: otherKey), "una firma fatta con un'altra chiave è rifiutata")
+    check(!UpdateSignature.isValid(zip, signature: "non-base64!", publicKey: publicKey), "una firma illeggibile è rifiutata")
+    check(!UpdateSignature.isValid(zip, signature: signature, publicKey: ""), "senza chiave pubblica non si accetta nulla")
+} catch {
+    check(false, "aggiornamenti: \(error)")
+}
+
 // MARK: - Esito
 
 print("")
