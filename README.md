@@ -13,12 +13,17 @@
 <p align="center">
   <a href="https://github.com/piratepxl/pizzinu/releases/latest"><b>Download</b></a> ·
   <a href="https://www.piratepixel.it/pizzinu/">Website</a> ·
+  <a href="https://t.me/pizzinuapp">Telegram</a> ·
   <a href="https://ko-fi.com/piratepxl">Buy me a coffee ☕</a> ·
   🇮🇹 <a href="README.it.md">Italiano</a>
 </p>
 
 <p align="center">
-[![Downloads](https://img.shields.io/github/downloads/piratepxl/pizzinu/total?label=downloads&color=d4179a)](https://github.com/piratepxl/pizzinu/releases) [![Release](https://img.shields.io/github/v/release/piratepxl/pizzinu?color=d4179a)](https://github.com/piratepxl/pizzinu/releases/latest) ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+  <a href="https://github.com/piratepxl/pizzinu/releases"><img src="https://img.shields.io/github/downloads/piratepxl/pizzinu/total?label=downloads&amp;color=d4179a" alt="Downloads"></a>
+  <a href="https://github.com/piratepxl/pizzinu/releases/latest"><img src="https://img.shields.io/github/v/release/piratepxl/pizzinu?color=d4179a" alt="Release"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <a href="https://t.me/pizzinuapp"><img src="https://img.shields.io/badge/Telegram-@pizzinuapp-26A5E4?logo=telegram&amp;logoColor=white" alt="Telegram"></a>
 </p>
 
 <p align="center">
@@ -164,6 +169,12 @@ small, native apps that do one thing well, are light on your Mac and respect you
 - Source code, downloads and bug reports: here on GitHub
   ([Releases](https://github.com/piratepxl/pizzinu/releases/latest) ·
   [Issues](https://github.com/piratepxl/pizzinu/issues))
+
+## Community
+
+- **Telegram channel** [@pizzinuapp](https://t.me/pizzinuapp): news and new versions.
+- **Telegram chat** [@pizzinuchat](https://t.me/pizzinuchat): questions, tips and ideas with other users.
+- Bugs and feature requests: [GitHub Issues](https://github.com/piratepxl/pizzinu/issues).
 
 ## Support
 

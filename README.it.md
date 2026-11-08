@@ -1,14 +1,17 @@
 # Pizzinu
 
 🇬🇧 [English](README.md) · 🇮🇹 Italiano · 🌐 [piratepixel.it/pizzinu](https://www.piratepixel.it/pizzinu/) ·
-[Scarica](https://github.com/piratepxl/pizzinu/releases/latest)
+[Scarica](https://github.com/piratepxl/pizzinu/releases/latest) · [Telegram](https://t.me/pizzinuapp)
 
 *Un'app [Piratepixel](https://www.piratepixel.it).*
 
-[![Downloads](https://img.shields.io/github/downloads/piratepxl/pizzinu/total?label=download&color=d4179a)](https://github.com/piratepxl/pizzinu/releases)
-[![Release](https://img.shields.io/github/v/release/piratepxl/pizzinu?color=d4179a)](https://github.com/piratepxl/pizzinu/releases/latest)
-![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+<p align="center">
+  <a href="https://github.com/piratepxl/pizzinu/releases"><img src="https://img.shields.io/github/downloads/piratepxl/pizzinu/total?label=download&amp;color=d4179a" alt="Downloads"></a>
+  <a href="https://github.com/piratepxl/pizzinu/releases/latest"><img src="https://img.shields.io/github/v/release/piratepxl/pizzinu?color=d4179a" alt="Release"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <a href="https://t.me/pizzinuapp"><img src="https://img.shields.io/badge/Telegram-@pizzinuapp-26A5E4?logo=telegram&amp;logoColor=white" alt="Telegram"></a>
+</p>
 
 <p align="center"><img src="docs/images/desktop.png" width="820" alt="Pizzinu: pizzini sulla scrivania del Mac"></p>
 
@@ -201,6 +204,12 @@ piccole e native, che fanno bene una cosa sola, pesano poco sul Mac e rispettano
 
 Pizzinu è distribuito con licenza **MIT** (vedi [LICENSE](LICENSE)), © 2026 Piratepixel. Le attribuzioni dei progetti open source
 e le licenze dei caratteri sono in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Community
+
+- **Canale Telegram** [@pizzinuapp](https://t.me/pizzinuapp): novità e nuove versioni.
+- **Chat Telegram** [@pizzinuchat](https://t.me/pizzinuchat): domande, consigli e idee con gli altri utenti.
+- Problemi e proposte: [GitHub Issues](https://github.com/piratepxl/pizzinu/issues).
 
 ## Sostieni Pizzinu
 

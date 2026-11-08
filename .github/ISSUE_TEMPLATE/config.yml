@@ -1,1 +1,8 @@
 blank_issues_enabled: true
+contact_links:
+  - name: 💬 Chat Telegram @pizzinuchat
+    url: https://t.me/pizzinuchat
+    about: Domande e consigli con gli altri utenti · Questions and tips from other users
+  - name: 📣 Canale Telegram @pizzinuapp
+    url: https://t.me/pizzinuapp
+    about: Novità e nuove versioni · News and new releases
