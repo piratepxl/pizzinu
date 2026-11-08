@@ -80,6 +80,9 @@ con l'indirizzo noreply di GitHub (configurata nel repository, mai l'email perso
   controllare i file in stage prima di ogni commit.
 - Le release (zip in `dist/`, creato da `Scripts/package_release.sh`) vanno su GitHub Releases,
   non nel repository.
+  Caricare sempre anche `dist/Pizzinu.zip` (nome fisso): i pulsanti «Scarica» del sito puntano a
+  `releases/latest/download/Pizzinu.zip`. Aggiornare a mano versione e peso dello zip nella
+  sezione «Scaricala e aprila» della landing.
 
 ## Attenzioni
 

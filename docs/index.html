@@ -534,6 +534,17 @@ kbd{font-family:var(--f-body);font-weight:700;font-size:.85em;min-width:1.9em;he
 .btn-tg{background:#fff;color:#1b7fc0}
 .btn-tg-line{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.7)}
 .btn-tg:hover,.btn-tg-line:hover{transform:translateY(-1px)}
+
+/* scelta del download */
+.dl-choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.dl-opt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:22px;border-radius:22px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3);min-width:0}
+.dl-main{background:rgba(255,255,255,.24)}
+.dl-k{font:700 12px var(--f-body);letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.dl-opt b{font:700 22px var(--f-display)}
+.dl-opt>span:not(.dl-k){font-size:15px;opacity:.92}
+.dl-opt>.btn,.dl-btns{margin-top:auto;padding-top:8px}
+.dl-btns{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:720px){.dl-choice{grid-template-columns:1fr}}
 </style>
 
 </head>
@@ -548,7 +559,7 @@ kbd{font-family:var(--f-body);font-weight:700;font-size:.85em;min-width:1.9em;he
     <a href="#temi" data-en="Themes">Temi</a>
     <a href="#scarica" data-en="Install">Installazione</a><a href="#opensource">GitHub</a><a href="#piratepixel">Piratepixel</a>
     <button class="theme" id="lang" type="button" aria-label="Lingua / Language">EN</button><button class="theme" id="theme" type="button">Tema: auto</button>
-    <a class="dl" href="#scarica" data-en="Download">Scarica</a>
+    <a class="dl js-dl" href="https://github.com/piratepxl/pizzinu/releases/latest/download/Pizzinu.zip" data-en="Download">Scarica</a>
   </nav>
 </header>
 
@@ -590,7 +601,7 @@ kbd{font-family:var(--f-body);font-weight:700;font-size:.85em;min-width:1.9em;he
       <h1 data-en="Your thoughts don’t wait.">I tuoi pensieri non aspettano.</h1>
       <p data-en="Pizzinu turns your Mac desktop into a board of notes that are always in sight. Jot something down, drag it anywhere, and it stays there.">Pizzinu trasforma la scrivania del Mac in una bacheca di foglietti sempre visibili. Scrivi al volo, trascina dove vuoi, e restano lì.</p>
       <div class="cta">
-        <a class="btn btn-w" href="#scarica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg><span data-en="Download for macOS">Scarica per macOS</span></a>
+        <a class="btn btn-w js-dl" href="https://github.com/piratepxl/pizzinu/releases/latest/download/Pizzinu.zip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg><span data-en="Download for macOS">Scarica per macOS</span></a>
         <a class="btn btn-g" href="#funzioni" data-en="See the features">Guarda le funzioni</a>
       </div>
     </div>
@@ -772,9 +783,22 @@ kbd{font-family:var(--f-body);font-weight:700;font-size:.85em;min-width:1.9em;he
         <div class="gk-txt"><b data-en="Confirm “Open Anyway”">Conferma «Apri comunque»</b><span data-en="Open Pizzinu again, press &lt;em&gt;Open Anyway&lt;/em&gt; and confirm with your password or Touch ID. Done, for good.">Riapri Pizzinu, premi <em>Apri comunque</em> e conferma con password o Touch ID. Fatto, per sempre.</span></div>
       </li>
     </ol>
-    <div class="cta">
-      <a class="btn btn-w" href="https://github.com/piratepxl/pizzinu/releases/latest" id="download" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg><span data-en="Download Pizzinu">Scarica Pizzinu</span></a>
-      <a class="btn btn-g" href="#prova" data-en="Back to the desk">Torna alla scrivania</a>
+    <div class="dl-choice">
+      <div class="dl-opt dl-main">
+        <span class="dl-k" data-en="Direct download">Download diretto</span>
+        <b>Pizzinu 1.0.0</b>
+        <span data-en="Zip file · 1.8 MB · macOS 14 or later on Apple Silicon">File zip · 1,8 MB · macOS 14 o successivo con Apple Silicon</span>
+        <a class="btn btn-w" href="https://github.com/piratepxl/pizzinu/releases/latest/download/Pizzinu.zip" id="download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg><span data-en="Download Pizzinu">Scarica Pizzinu</span></a>
+      </div>
+      <div class="dl-opt">
+        <span class="dl-k" data-en="From GitHub">Da GitHub</span>
+        <b data-en="The release page">La pagina della versione</b>
+        <span data-en="Release notes, SHA-256 checksum, earlier versions and source code.">Note di rilascio, impronta SHA-256, versioni precedenti e codice sorgente.</span>
+        <div class="dl-btns">
+          <a class="btn btn-g" href="https://github.com/piratepxl/pizzinu/releases/latest" target="_blank" rel="noopener" data-en="Open on GitHub">Apri su GitHub</a>
+          <a class="btn btn-g" href="https://github.com/piratepxl/pizzinu/releases" target="_blank" rel="noopener" data-en="All versions">Tutte le versioni</a>
+        </div>
+      </div>
     </div>
   </div>
   <div class="gk-notes">
@@ -1173,5 +1197,9 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(relayout);
 })();
 </script>
 
+<script>
+/* Download diretto: dopo il clic mostra subito come aprirla la prima volta */
+document.querySelectorAll('.js-dl').forEach(a=>a.addEventListener('click',()=>{setTimeout(()=>{const t=document.getElementById('scarica');if(t)t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})},400)}));
+</script>
 </body>
 </html>
