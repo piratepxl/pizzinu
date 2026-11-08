@@ -5,6 +5,13 @@
 
 *Un'app [Piratepixel](https://www.piratepixel.it).*
 
+[![Downloads](https://img.shields.io/github/downloads/piratepxl/pizzinu/total?label=download&color=d4179a)](https://github.com/piratepxl/pizzinu/releases)
+[![Release](https://img.shields.io/github/v/release/piratepxl/pizzinu?color=d4179a)](https://github.com/piratepxl/pizzinu/releases/latest)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+<p align="center"><img src="docs/images/desktop.png" width="820" alt="Pizzinu: pizzini sulla scrivania del Mac"></p>
+
 **Post-it digitali per macOS.** Pizzinu mostra ogni nota come un vero foglietto adesivo
 appoggiato sulla scrivania: finestre flottanti indipendenti, carta disegnata in forma vettoriale
 con volume e ombre, salvataggio locale automatico e un'icona nella barra dei menu sempre a
@@ -78,6 +85,24 @@ senza connessioni remote.
   in qualunque editor; si importano anche file Markdown scritti altrove.
 - **Menu bar** (`NSStatusItem`): il clic crea subito una nuova nota, il clic destro apre il menu.
 - **Avvio automatico all'accesso** opzionale (`SMAppService`). **Interfaccia in italiano.**
+
+## Immagini
+
+**13 temi di carta**, più il vetro Liquid Glass di sistema su macOS 26. Le note nuove ne ricevono uno a caso.
+
+<p align="center"><img src="docs/images/themes.png" width="820" alt="I temi di carta di Pizzinu"></p>
+
+**Fogli Markdown** con la barra fluttuante, **puntina** e **promemoria** con il selettore che parte dai minuti.
+
+<p align="center"><img src="docs/images/markdown-reminder.png" width="820" alt="Foglio Markdown, nota con puntina e selettore del promemoria"></p>
+
+**Pizzino segreto**: cifrato con una password, si piega a quadrato e si chiude con la ceralacca.
+
+<p align="center"><img src="docs/images/secret.png" width="820" alt="Un pizzino segreto aperto e sigillato"></p>
+
+**L'archivio**: tutte le note come foglietti su una bacheca, oppure in elenco.
+
+<p align="center"><img src="docs/images/archive.png" width="820" alt="L'archivio di Pizzinu"></p>
 
 ## Requisiti
 

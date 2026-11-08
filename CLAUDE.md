@@ -42,6 +42,10 @@ osascript -e 'quit app "Pizzinu"' 2>/dev/null; sleep 1; open build/Pizzinu.app
 - Il self-test deve restare a **0 fallite**; aggiungi verifiche per ogni logica nuova in `PizzinuKit`.
 - Istantanee senza schermo: `PIZZINU_SNAPSHOT_DIR=/cartella build/Pizzinu.app/Contents/MacOS/Pizzinu`
   (vedi `DebugSnapshots.swift`). Il vetro di sistema non compare nelle istantanee.
+- Immagini del README: dopo le istantanee,
+  `python3 Scripts/make_screenshots.py /cartella docs/images` (serve Pillow) rigenera
+  `desktop.png`, `themes.png`, `secret.png`, `markdown-reminder.png` dalla sottocartella
+  `vetrina/`. Rifarle quando cambia l'aspetto dei foglietti.
 - I dati dell'app stanno in `~/Library/Application Support/Pizzinu/` di ciascun Mac.
 
 ## Regole da non rompere

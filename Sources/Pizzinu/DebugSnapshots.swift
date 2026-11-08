@@ -65,6 +65,45 @@ enum DebugSnapshots {
         renderStatusIcon(to: directory.appendingPathComponent("barra-menu.png"))
         renderArchive(to: directory.appendingPathComponent("archivio.png"), selecting: nil)
         renderArchive(to: directory.appendingPathComponent("archivio-selezione.png"), selecting: 1)
+        renderShowcase(in: directory.appendingPathComponent("vetrina", isDirectory: true))
+    }
+
+    /// Foglietti con testi diversi e senza comandi, per comporre le immagini del README
+    /// (`Scripts/make_screenshots.py`). Liquid Glass è escluso: il vetro di sistema non
+    /// compare nelle istantanee.
+    static func renderShowcase(in directory: URL) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let samples: [(name: String, text: String, color: NoteColorID, shape: PaperShape, markdown: Bool, pinned: Bool, reminder: Bool)] = [
+            ("chiamare", "Chiamare Luca per il progetto", .lemon, .soft, false, true, false),
+            ("spesa", "# Spesa\n- [x] Latte\n- [x] Pane\n- [ ] Caffè\n- [ ] ==Basilico==", .pink, .taped, true, false, false),
+            ("idea", "Idea: una palette più calda per il sito", .orange, .crumpled, false, false, false),
+            ("riunione", "Riunione con il fornitore", .skyBlue, .clipped, false, false, true),
+            ("dentista", "Prenotare il dentista", .pastelGreen, .ruffled, false, false, false),
+            ("bolletta", "Pagare la bolletta entro venerdì", .purple, .peeled, false, false, false),
+            ("ricetta", "Pasta di nonna:\n300 g di farina, 3 uova", .paper, .tornRuled, false, false, false),
+            ("libro", "Leggere: Il Gattopardo", .lemon, .ribbonBlue, false, false, false),
+            ("respira", "Respira.", .pink, .round, false, false, false),
+        ]
+        for sample in samples {
+            var note = Note(content: sample.text, colorID: sample.color, paperShape: sample.shape, isMarkdown: sample.markdown)
+            note.paperSize = sample.shape.preferredPaperSize(from: note.paperSize)
+            if sample.markdown { note.paperSize = CGSize(width: 250, height: 240) }
+            note.isPinned = sample.pinned
+            if sample.reminder { note.reminderAt = Calendar.current.date(bySettingHour: 15, minute: 30, second: 0, of: Date()) }
+            render(note: note, shape: sample.shape, to: directory.appendingPathComponent("\(sample.name).png"), controls: false)
+        }
+        // Galleria: un foglietto per tema, con il nome del tema.
+        let colors: [NoteColorID] = [.lemon, .pink, .skyBlue, .orange, .pastelGreen, .purple]
+        for (index, shape) in PaperShape.allCases.enumerated() where shape != .liquidGlass {
+            var note = Note(content: shape.displayName, colorID: colors[index % colors.count], paperShape: shape)
+            note.paperSize = shape.preferredPaperSize(from: CGSize(width: 220, height: 190))
+            render(note: note, shape: shape, to: directory.appendingPathComponent(String(format: "tema-%02d-%@.png", index, shape.rawValue)), controls: false)
+        }
+        // Una nota con i comandi in vista, per mostrare puntina e promemoria.
+        var tools = Note(content: "Chiamare Luca", colorID: .pastelGreen, paperShape: .taped)
+        tools.isPinned = true
+        tools.reminderAt = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: Date())
+        render(note: tools, shape: .taped, to: directory.appendingPathComponent("comandi.png"))
     }
 
     /// Fotogrammi della piegatura 3D del pizzino segreto, disegnati da
@@ -319,7 +358,7 @@ enum DebugSnapshots {
         try? FileManager.default.removeItem(at: folder)
     }
 
-    private static func render(note: Note, shape: PaperShape, to url: URL, editing: Bool = false) {
+    private static func render(note: Note, shape: PaperShape, to url: URL, editing: Bool = false, controls: Bool = true) {
         let metrics = StickyMetrics.make(paperSize: note.paperSize, mode: .realistic)
         let size = metrics.windowSize(forPaperSize: note.paperSize)
         let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: size),
@@ -332,7 +371,7 @@ enum DebugSnapshots {
         host.tilt = ProcessInfo.processInfo.environment["PIZZINU_SNAPSHOT_TILT"].flatMap(Double.init).map { CGFloat($0) } ?? CGFloat(note.tiltDegrees)
         content.apply(note: note, metrics: metrics, palette: note.palette(globalMode: .realistic),
                       shape: shape, showsShadow: true, checklistItems: [])
-        content.setControlsEngaged(true)
+        content.setControlsEngaged(controls)
         host.layoutSubtreeIfNeeded()
         if editing {
             content.beginEditing()

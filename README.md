@@ -18,7 +18,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/archive.png" width="760" alt="Pizzinu archive with sticky notes">
+[![Downloads](https://img.shields.io/github/downloads/piratepxl/pizzinu/total?label=downloads&color=d4179a)](https://github.com/piratepxl/pizzinu/releases) [![Release](https://img.shields.io/github/v/release/piratepxl/pizzinu?color=d4179a)](https://github.com/piratepxl/pizzinu/releases/latest) ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+</p>
+
+<p align="center">
+  <img src="docs/images/desktop.png" width="820" alt="Pizzinu sticky notes on a Mac desktop">
 </p>
 
 *Pizzinu* (Sicilian for "pizzino": a small folded note) puts every note on your desktop as a
@@ -55,6 +59,25 @@ stay on your Mac, and are always one click away from the menu bar.
 - **Markdown import/export:** one `.md` file per note, readable in Obsidian or any editor.
 - **Light:** about 25 MB of memory at rest and 0 % CPU. Pure AppKit + SwiftUI, no
   dependencies.
+
+## Screenshots
+
+**13 paper themes**, plus system Liquid Glass on macOS 26. New notes get a random one.
+
+<p align="center"><img src="docs/images/themes.png" width="820" alt="The paper themes of Pizzinu"></p>
+
+**Markdown sheets** with a floating toolbar, **pin** and **reminders** with a picker that starts
+with minutes.
+
+<p align="center"><img src="docs/images/markdown-reminder.png" width="820" alt="Markdown sheet, pinned note and reminder picker"></p>
+
+**Secret notes**: encrypted with a password, they fold into a square sealed with wax.
+
+<p align="center"><img src="docs/images/secret.png" width="820" alt="A secret note and the same note sealed"></p>
+
+**The archive**: every note as a sheet on a board, or as a compact list.
+
+<p align="center"><img src="docs/images/archive.png" width="820" alt="Pizzinu archive with sticky notes"></p>
 
 ## Requirements
 
