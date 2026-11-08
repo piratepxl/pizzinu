@@ -65,6 +65,17 @@ Elenco completo e motivazioni in [docs/STATUS.md § 3](docs/STATUS.md). In sinte
 10. Niente permessi speciali: niente monitor globali di tastiera.
 11. Icona della barra menu: clic = nuova nota, clic destro/⌃-clic = menu.
 
+## Siti
+
+| Sito | Cartella sul Mac | Sul server |
+| --- | --- | --- |
+| piratepixel.it | `/Volumes/WD_BLACK 1TB/Works/DEVELOPER/piratepixel.it/` | radice |
+| Pagina di Pizzinu | `../HTML/Pizzinu.html` (sorgente) → `../HTML/pizzinu/` | `/pizzinu/` |
+
+`docs/index.html` è la copia della pagina di Pizzinu nel repository (immagini in `images/`).
+Il caricamento sul server lo fa l'utente: non scrivere nella cartella CloudMounter del server.
+A ogni nuova versione aggiornare versione e peso dello zip in entrambi i siti.
+
 ## Git e GitHub
 
 Repository: https://github.com/piratepxl/pizzinu (pubblico). Identità dei commit: `piratepxl`
