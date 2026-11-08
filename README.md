@@ -150,5 +150,5 @@ Pizzinu is free and open source. If it makes your day a little tidier, you can
 
 ## License
 
-[MIT](LICENSE) © 2026 piratepxl. Third-party code and font licences (SIL OFL) are listed in
+[MIT](LICENSE) © 2026 Piratepixel. Third-party code and font licences (SIL OFL) are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -174,7 +174,7 @@ piccole e native, che fanno bene una cosa sola, pesano poco sul Mac e rispettano
 
 ## Licenza
 
-Pizzinu è distribuito con licenza **MIT** (vedi [LICENSE](LICENSE)). Le attribuzioni dei progetti open source
+Pizzinu è distribuito con licenza **MIT** (vedi [LICENSE](LICENSE)), © 2026 Piratepixel. Le attribuzioni dei progetti open source
 e le licenze dei caratteri sono in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Sostieni Pizzinu
