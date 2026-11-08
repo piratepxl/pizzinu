@@ -61,7 +61,27 @@ Elenco completo e motivazioni in [docs/STATUS.md § 3](docs/STATUS.md). In sinte
 10. Niente permessi speciali: niente monitor globali di tastiera.
 11. Icona della barra menu: clic = nuova nota, clic destro/⌃-clic = menu.
 
+## Git e GitHub
+
+Repository: https://github.com/piratepxl/pizzinu (pubblico). Identità dei commit: `piratepxl`
+con l'indirizzo noreply di GitHub (configurata nel repository, mai l'email personale).
+
+- `main` è la versione **stabile**: ci va solo codice che compila e passa il self-test.
+- Dopo ogni funzionalità completata: `bash build.sh` + self-test, controllo di `git status` e
+  `git diff`, commit descrittivo, `git push`. Lavori lunghi o rischiosi su un branch dedicato.
+- **Mai** `push --force`, `reset --hard`, riscritture della storia, cancellazione di branch o
+  file senza conferma esplicita dell'utente. Per togliere file dal progetto preferire lo
+  spostamento in `../Backup/`.
+- **Mai** segreti, token, password reali, dati personali o archivi `.sqlite` nei commit:
+  controllare i file in stage prima di ogni commit.
+- Le release (zip in `dist/`, creato da `Scripts/package_release.sh`) vanno su GitHub Releases,
+  non nel repository.
+
 ## Attenzioni
+
+- **Nextcloud fa ricomparire file vecchi** (cartelle «Nome 2», file cancellati): se la build
+  fallisce con nomi duplicati o tipi ambigui, cercare file in più rispetto all'ultimo commit
+  (`git status`). La copia in `~/Nextcloud/APPs Il Pirata/Pizzinu` non è più quella di lavoro.
 
 - Ogni modifica allo schema SQLite = nuova migrazione in `SchemaMigrator` + verifica nel self-test.
 - Il pizzino segreto (`SecretBox`, formato `pz2`) è codice di sicurezza: niente scorciatoie,
