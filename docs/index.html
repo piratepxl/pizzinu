@@ -127,7 +127,7 @@ kbd{font-family:var(--f-body);font-weight:700;font-size:.85em;min-width:1.9em;he
 @media (max-width:720px){.app:nth-child(n+7){display:none}}
 
 /* hint */
-.hint{position:absolute;left:44%;top:31%;z-index:3;color:#fff;font:700 30px var(--f-hand);rotate:-6deg;display:flex;align-items:flex-end;gap:2px;transition:opacity .5s;pointer-events:none;text-shadow:0 2px 14px rgba(110,0,80,.5)}
+.hint{position:absolute;left:max(44%,calc(clamp(20px,5%,64px) + min(540px,46%) + 12px));top:31%;z-index:3;color:#fff;font:700 30px var(--f-hand);rotate:-6deg;display:flex;align-items:flex-end;gap:2px;transition:opacity .5s;pointer-events:none;text-shadow:0 2px 14px rgba(110,0,80,.5)}
 .hint svg{width:70px;height:54px;margin-top:6px}
 .touched .hint{opacity:0}
 @media (max-width:720px){.hint{left:40%;top:37%;font-size:24px}.hint svg{width:50px;height:40px}}
