@@ -1,6 +1,9 @@
 # Pizzinu
 
-🇬🇧 [English](README.md) · 🇮🇹 Italiano
+🇬🇧 [English](README.md) · 🇮🇹 Italiano · 🌐 [piratepixel.it/pizzinu](https://www.piratepixel.it/pizzinu/) ·
+[Scarica](https://github.com/piratepxl/pizzinu/releases/latest)
+
+*Un'app [Piratepixel](https://www.piratepixel.it).*
 
 **Post-it digitali per macOS.** Pizzinu mostra ogni nota come un vero foglietto adesivo
 appoggiato sulla scrivania: finestre flottanti indipendenti, carta disegnata in forma vettoriale
@@ -157,6 +160,17 @@ Pizzinu/
 | [docs/LIMITS.md](docs/LIMITS.md) | Limiti noti |
 | [docs/NEXTCLOUD_ROADMAP.md](docs/NEXTCLOUD_ROADMAP.md) | Roadmap dell'integrazione con Nextcloud Notes |
 | [docs/REFERENCE_ANALYSIS.md](docs/REFERENCE_ANALYSIS.md) | Analisi dei progetti di riferimento |
+
+## Chi fa Pizzinu: Piratepixel
+
+Pizzinu è un'app di **Piratepixel**, il nome con cui progetto e pubblico il mio software: app
+piccole e native, che fanno bene una cosa sola, pesano poco sul Mac e rispettano la privacy.
+
+- Pagina di Pizzinu: **[piratepixel.it/pizzinu](https://www.piratepixel.it/pizzinu/)**
+- Gli altri progetti Piratepixel: [piratepixel.it](https://www.piratepixel.it)
+- Codice, versioni da scaricare e segnalazioni: qui su GitHub
+  ([Release](https://github.com/piratepxl/pizzinu/releases/latest) ·
+  [Issues](https://github.com/piratepxl/pizzinu/issues))
 
 ## Licenza
 

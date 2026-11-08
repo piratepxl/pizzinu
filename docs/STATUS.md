@@ -3,7 +3,7 @@
 Documento di **handoff**: dove si trova Pizzinu, cosa è cambiato di recente, le regole da non
 rompere e cosa resta aperto. Serve a riprendere il lavoro senza ricostruire il contesto dal codice.
 
-**Ultimo aggiornamento:** 7 novembre 2026.
+**Ultimo aggiornamento:** 8 novembre 2026.
 
 ---
 
@@ -265,6 +265,19 @@ rompere e cosa resta aperto. Serve a riprendere il lavoro senza ricostruire il c
 - Cartelle duplicate di Nextcloud (`ImportExport 2`, `Models 2`, …) riordinate.
 
 ---
+
+## 2.13 Pubblicazione (8 novembre 2026)
+
+- Repository **https://github.com/piratepxl/pizzinu** (branch `main` stabile), Release
+  **v1.0.0** con zip e SHA-256.
+- Pizzinu è un'app **Piratepixel**: sito ufficiale **https://www.piratepixel.it/pizzinu/**
+  (homepage del repository). La landing (`../../HTML/Pizzinu.html`) ha ora un `<head>` vero
+  (title, description, canonical, Open Graph, favicon), la sezione «Un'app Piratepixel» e il
+  link nel piè di pagina. La cartella da caricare sul server è `../../HTML/pizzinu/`
+  (`index.html`, `icon.png`, `archive.png`); `docs/index.html` è la stessa pagina con le
+  immagini in `images/`. GitHub Pages non è attivo.
+- Rimossi dai sorgenti (spostati in `../../Backup/Duplicati-Nextcloud/`) cinque file vecchi
+  ricomparsi con Nextcloud che impedivano la compilazione.
 
 ## 3. Regole di comportamento da non rompere
 

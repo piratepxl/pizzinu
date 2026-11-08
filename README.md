@@ -6,12 +6,13 @@
 
 <p align="center">
   <b>Sticky notes for macOS that look like real paper.</b><br>
-  Native, lightweight, private. No account, no cloud, no tracking.
+  Native, lightweight, private. No account, no cloud, no tracking.<br>
+  An app by <a href="https://www.piratepixel.it">Piratepixel</a>.
 </p>
 
 <p align="center">
   <a href="https://github.com/piratepxl/pizzinu/releases/latest"><b>Download</b></a> ·
-  <a href="https://piratepxl.github.io/pizzinu/">Website</a> ·
+  <a href="https://www.piratepixel.it/pizzinu/">Website</a> ·
   <a href="https://ko-fi.com/piratepxl">Buy me a coffee ☕</a> ·
   🇮🇹 <a href="README.it.md">Italiano</a>
 </p>
@@ -129,6 +130,17 @@ The technical documentation is in Italian:
 [architecture](docs/ARCHITECTURE.md), [Markdown format](docs/MARKDOWN_FORMAT.md),
 [tests](docs/TEST_REPORT.md), [performance](docs/PERFORMANCE.md),
 [known limits](docs/LIMITS.md), [Nextcloud roadmap](docs/NEXTCLOUD_ROADMAP.md).
+
+## About Piratepixel
+
+Pizzinu is made by **Piratepixel**, the name under which I design and publish my software:
+small, native apps that do one thing well, are light on your Mac and respect your privacy.
+
+- Pizzinu's home page: **[piratepixel.it/pizzinu](https://www.piratepixel.it/pizzinu/)**
+- Other Piratepixel projects: [piratepixel.it](https://www.piratepixel.it)
+- Source code, downloads and bug reports: here on GitHub
+  ([Releases](https://github.com/piratepxl/pizzinu/releases/latest) ·
+  [Issues](https://github.com/piratepxl/pizzinu/issues))
 
 ## Support
 
