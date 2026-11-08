@@ -65,6 +65,13 @@ Elenco completo e motivazioni in [docs/STATUS.md § 3](docs/STATUS.md). In sinte
 10. Niente permessi speciali: niente monitor globali di tastiera.
 11. Icona della barra menu: clic = nuova nota, clic destro/⌃-clic = menu.
 
+## Lista delle cose da fare
+
+`../md/TODO.md` (privata, fuori dal repository) raccoglie bug e idee man mano che l'utente usa
+l'app. Quando scrive «appunto: …»: riformula in modo chiaro, metti nella sezione giusta con una
+priorità (🔴/🟡/⚪), aggiorna la data. Quando una voce è fatta, spostala in «Fatto» con la
+versione. Prima di iniziare un lavoro nuovo, guardala.
+
 ## Siti
 
 | Sito | Cartella sul Mac | Sul server |
