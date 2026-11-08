@@ -1,0 +1,38 @@
+# Build
+.build/
+build/
+dist/
+.swiftpm/
+DerivedData/
+*.xcodeproj
+*.xcworkspace
+Resources/AppIcon.iconset/
+
+# macOS
+.DS_Store
+._*
+
+# Local data (never commit a real archive)
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Editor e strumenti locali
+xcuserdata/
+.vscode/
+.idea/
+*.swp
+*.log
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Credenziali e firma (mai nel repository)
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.cer
+*.mobileprovision
+*.provisionprofile
+*.keychain-db
