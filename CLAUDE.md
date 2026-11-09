@@ -1,7 +1,6 @@
 # CLAUDE.md — Pizzinu
 
-Istruzioni per Claude Code. Il progetto vive su un disco esterno (`/Volumes/WD_BLACK 1TB/...`)
-e si lavora da più Mac: questo file è il contesto condiviso, la memoria locale di Claude no.
+Istruzioni per Claude Code. Il progetto vive su un disco esterno e si lavora da più Mac: questo file è il contesto condiviso, la memoria locale di Claude no.
 
 ## Lingua e modo di lavorare
 
@@ -79,11 +78,11 @@ versione. Prima di iniziare un lavoro nuovo, guardala.
 
 | Sito | Cartella sul Mac | Sul server |
 | --- | --- | --- |
-| piratepixel.it | `/Volumes/WD_BLACK 1TB/Works/DEVELOPER/piratepixel.it/` | radice |
+| piratepixel.it | `../../piratepixel.it/` | radice |
 | Pagina di Pizzinu | `../HTML/Pizzinu.html` (sorgente) → `../HTML/pizzinu/` | `/pizzinu/` |
 
 `docs/index.html` è la copia della pagina di Pizzinu nel repository (immagini in `images/`).
-Il caricamento sul server lo fa l'utente: non scrivere nella cartella CloudMounter del server.
+Il caricamento sul server lo fa l'utente: non scrivere nella cartella del server montata sul Mac.
 A ogni nuova versione aggiornare versione e peso dello zip in entrambi i siti.
 
 ## Git e GitHub
@@ -121,7 +120,8 @@ incolla l'utente). Testi nel formato di `../md/TELEGRAM.md`; per un'uscita scriv
 
 - **Nextcloud fa ricomparire file vecchi** (cartelle «Nome 2», file cancellati): se la build
   fallisce con nomi duplicati o tipi ambigui, cercare file in più rispetto all'ultimo commit
-  (`git status`). La copia in `~/Nextcloud/APPs Il Pirata/Pizzinu` non è più quella di lavoro.
+  (`git status`). Eventuali vecchie copie del progetto dentro Nextcloud non sono più quelle di
+  lavoro.
 
 - Ogni modifica allo schema SQLite = nuova migrazione in `SchemaMigrator` + verifica nel self-test.
 - Il pizzino segreto (`SecretBox`, formato `pz2`) è codice di sicurezza: niente scorciatoie,
