@@ -52,8 +52,7 @@ osascript -e 'quit app "Pizzinu"' 2>/dev/null; sleep 1; open build/Pizzinu.app
   `python3 Scripts/make_screenshots.py /cartella docs/images` (serve Pillow) rigenera
   `desktop.png`, `themes.png`, `secret.png`, `markdown-reminder.png` dalla sottocartella
   `vetrina/`. Rifarle quando cambia l'aspetto dei foglietti. L'immagine d'apertura dei due README è `banner.png`, copia di `../Grafica/Social/github.png`:
-  se l'utente la rifà, ricopiarla. `hero.png` (scena della landing, `Scripts/make_hero.py`) non è
-  più usata nei README.
+  se l'utente la rifà, ricopiarla.
 - I dati dell'app stanno in `~/Library/Application Support/Pizzinu/` di ciascun Mac.
 
 ## Regole da non rompere
@@ -85,14 +84,9 @@ versione. Prima di iniziare un lavoro nuovo, guardala.
 
 ## Siti
 
-| Sito | Cartella sul Mac | Sul server |
-| --- | --- | --- |
-| piratepixel.it | `../../piratepixel.it/` | radice |
-| Pagina di Pizzinu | `../HTML/Pizzinu.html` (sorgente) → `../HTML/pizzinu/` | `/pizzinu/` |
-
-`docs/index.html` è la copia della pagina di Pizzinu nel repository (immagini in `images/`).
-Il caricamento sul server lo fa l'utente: non scrivere nella cartella del server montata sul Mac.
-A ogni nuova versione aggiornare versione e peso dello zip in entrambi i siti.
+I siti (pagina di Pizzinu e piratepixel.it) **non stanno nel repository e non vanno su GitHub**:
+qui ci sono solo i file dell'app. Cartelle, regole del logo e cose da aggiornare a ogni versione
+sono in `../md/SITI.md` (privato). Il caricamento sul server lo fa l'utente.
 
 ## Git e GitHub
 
@@ -113,8 +107,8 @@ con l'indirizzo noreply di GitHub (configurata nel repository, mai l'email perso
   (`Scripts/update_key.sh`): senza `Pizzinu.zip.sig` nella release l'aggiornamento automatico
   non parte. Mai mostrare o committare la chiave privata.
   Caricare sempre anche `dist/Pizzinu.zip` (nome fisso): i pulsanti «Scarica» del sito puntano a
-  `releases/latest/download/Pizzinu.zip`. Aggiornare a mano versione e peso dello zip nella
-  sezione «Scaricala e aprila» della landing.
+  `releases/latest/download/Pizzinu.zip`. Aggiornare a mano versione e peso dello zip nei siti
+  (vedi `../md/SITI.md`).
 
 ## Canale Telegram
 

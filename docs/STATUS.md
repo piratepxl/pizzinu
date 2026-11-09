@@ -298,8 +298,9 @@ rompere e cosa resta aperto. Serve a riprendere il lavoro senza ricostruire il c
   (homepage del repository). La landing (`../../HTML/Pizzinu.html`) ha ora un `<head>` vero
   (title, description, canonical, Open Graph, favicon), la sezione «Un'app Piratepixel» e il
   link nel piè di pagina. La cartella da caricare sul server è `../../HTML/pizzinu/`
-  (`index.html`, `icon.png`, `archive.png`); `docs/index.html` è la stessa pagina con le
-  immagini in `images/`. GitHub Pages non è attivo.
+  (`index.html`, `icon.png`, `archive.png`). GitHub Pages non è attivo. Dal 9 nov 2026 i file
+  dei siti non stanno più nel repository (tolti `docs/index.html`, `docs/.nojekyll`,
+  `docs/images/hero.png`, `Scripts/make_hero.py`).
 - Rimossi dai sorgenti (spostati in `../../Backup/Duplicati-Nextcloud/`) cinque file vecchi
   ricomparsi con Nextcloud che impedivano la compilazione.
 
