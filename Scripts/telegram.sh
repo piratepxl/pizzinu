@@ -45,8 +45,9 @@ api() {
   local method="$1"; shift
   local out token
   token="$(read_token)" || exit 1
-  out="$(printf 'url = "%s/bot%s/%s"\n' "$API" "$token" "$method" \
-    | curl -sS --max-time 120 -K - "$@")" || die "Telegram non risponde."
+  # -K da un descrittore (non da stdin: con -F curl non riesce a leggerlo).
+  out="$(curl -sS --max-time 300 -K <(printf 'url = "%s/bot%s/%s"\n' "$API" "$token" "$method") "$@")" \
+    || die "Telegram non risponde."
   if [ "$(printf '%s' "$out" | jq -r '.ok')" != "true" ]; then
     die "Telegram: $(printf '%s' "$out" | jq -r '.description // "errore sconosciuto"')"
   fi
@@ -133,7 +134,8 @@ case "${1:-}" in
     echo "File: $FILE ($(( SIZE / 1024 )) KB)"
     [ -n "$CAPTION" ] && printf '%s\n' "$CAPTION"
     confirm "Carico questo file su $CHAT?"
-    FORM=(-F "chat_id=$CHAT" -F "document=@$FILE")
+    # --form-string: con -F la «@» di @pizzinuapp significherebbe «leggi questo file».
+    FORM=(--form-string "chat_id=$CHAT" -F "document=@$FILE")
     [ -n "$CAPTION" ] && FORM+=(--form-string "caption=$CAPTION" -F "parse_mode=HTML")
     R="$(api sendDocument "${FORM[@]}")"
     echo "==> Caricato, messaggio $(printf '%s' "$R" | jq -r '.result.message_id')"
