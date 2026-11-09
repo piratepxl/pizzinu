@@ -27,6 +27,13 @@ Dettagli in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Fuori dal repository, 
 superiore: `../md/` (brand, tono di voce, specifica estesa `PIZZINU.md`), `../HTML/Pizzinu.html`
 (landing page), `../Grafica/` (sorgenti grafici), `../GUIDA_PUBBLICAZIONE_GITHUB.md`.
 
+**Immagini di presentazione** (scelte dall'utente, da usare su GitHub, social e Telegram quando
+serve un'immagine di Pizzinu), in `../Grafica/Social/`:
+`github.png` (1280×640, in inglese: anteprima social del repository e immagine larga),
+`orizzontale.png` (1080×1080, in italiano: post quadrati) e `verticale.png` (1080×1920, storie e
+reel). Non ritoccarle né ricrearle senza chiedere: le prepara l'utente dai PSD nella stessa
+cartella. L'anteprima del repository si carica solo a mano: Settings ▸ General ▸ Social preview.
+
 ## Comandi
 
 ```bash
