@@ -84,7 +84,6 @@ download, al primo avvio macOS può bloccare l'apertura. Per autorizzarla:
   3. nella sezione **Sicurezza** premi **Apri comunque** accanto a «Il Mac ha bloccato Pizzinu»
      (il pulsante resta disponibile per circa un'ora dopo l'avviso);
   4. riapri Pizzinu, premi **Apri comunque** e conferma con password o Touch ID.
-  La landing page mostra gli stessi passaggi con finestre di macOS illustrate (riquadro «Scaricala e aprila»).
 - **macOS 14 Sonoma**: tasto destro (o Ctrl-clic) sul bundle ▸ **Apri** ▸ conferma **Apri**;
 - oppure da Terminale, rimuovi l'attributo di quarantena (vale solo per Pizzinu, non disattiva
   Gatekeeper):

@@ -186,7 +186,6 @@ Pizzinu/
 
 | Documento | Contenuto |
 | --- | --- |
-| [docs/STATUS.md](docs/STATUS.md) | Punto della situazione e passaggio di consegne |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architettura, database, flussi principali |
 | [docs/MARKDOWN_FORMAT.md](docs/MARKDOWN_FORMAT.md) | Formato di scambio: un file `.md` per nota |
 | [docs/INSTALL.md](docs/INSTALL.md) | Installazione e avvio |
@@ -194,7 +193,6 @@ Pizzinu/
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Memoria e CPU |
 | [docs/LIMITS.md](docs/LIMITS.md) | Limiti noti |
 | [docs/NEXTCLOUD_ROADMAP.md](docs/NEXTCLOUD_ROADMAP.md) | Roadmap dell'integrazione con Nextcloud Notes |
-| [docs/REFERENCE_ANALYSIS.md](docs/REFERENCE_ANALYSIS.md) | Analisi dei progetti di riferimento |
 
 ## Chi fa Pizzinu: Piratepixel
 
