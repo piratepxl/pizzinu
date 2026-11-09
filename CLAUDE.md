@@ -69,7 +69,10 @@ Elenco completo e motivazioni in [docs/STATUS.md § 3](docs/STATUS.md). In sinte
 
 `../md/TODO.md` (privata, fuori dal repository) raccoglie bug e idee man mano che l'utente usa
 l'app. Quando scrive «appunto: …»: riformula in modo chiaro, metti nella sezione giusta con una
-priorità (🔴/🟡/⚪), aggiorna la data. Quando una voce è fatta, spostala in «Fatto» con la
+priorità (🔴/🟡/⚪), aggiorna la data. **Prima di aggiungere, controlla che l'appunto non ci sia
+già** (in `TODO.md`, in «Fatto», in `docs/STATUS.md` e nelle roadmap di `docs/`): se c'è, integra
+la voce esistente con quello che manca invece di duplicarla, e segnala se contraddice una scelta
+già fatta (es. una funzione tolta di proposito). Quando una voce è fatta, spostala in «Fatto» con la
 versione. Prima di iniziare un lavoro nuovo, guardala.
 
 ## Siti
@@ -104,6 +107,15 @@ con l'indirizzo noreply di GitHub (configurata nel repository, mai l'email perso
   Caricare sempre anche `dist/Pizzinu.zip` (nome fisso): i pulsanti «Scarica» del sito puntano a
   `releases/latest/download/Pizzinu.zip`. Aggiornare a mano versione e peso dello zip nella
   sezione «Scaricala e aprila» della landing.
+
+## Canale Telegram
+
+`Scripts/telegram.sh` pubblica su **@pizzinuapp** tramite un bot amministratore (token solo nel
+Portachiavi, voce «Pizzinu Telegram bot»: su un Mac nuovo `bash Scripts/telegram.sh setup`, lo
+incolla l'utente). Testi nel formato di `../md/TELEGRAM.md`; per un'uscita scrivere
+`dist/telegram-<versione>.md` dal modello § 2.5 e lanciare `telegram.sh release` (post + zip).
+**Ogni pubblicazione è pubblica:** mostrare prima il testo esatto (`telegram.sh preview`) e usare
+`--yes` solo dopo il sì dell'utente in chat. Mai stampare o committare il token.
 
 ## Attenzioni
 
