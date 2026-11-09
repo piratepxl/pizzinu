@@ -51,7 +51,9 @@ osascript -e 'quit app "Pizzinu"' 2>/dev/null; sleep 1; open build/Pizzinu.app
 - Immagini del README: dopo le istantanee,
   `python3 Scripts/make_screenshots.py /cartella docs/images` (serve Pillow) rigenera
   `desktop.png`, `themes.png`, `secret.png`, `markdown-reminder.png` dalla sottocartella
-  `vetrina/`. Rifarle quando cambia l'aspetto dei foglietti. L'immagine d'apertura `hero.png` è la scena della landing: `python3 Scripts/make_hero.py ../HTML/Pizzinu.html docs/images/hero.png` (serve Chrome).
+  `vetrina/`. Rifarle quando cambia l'aspetto dei foglietti. L'immagine d'apertura dei due README è `banner.png`, copia di `../Grafica/Social/github.png`:
+  se l'utente la rifà, ricopiarla. `hero.png` (scena della landing, `Scripts/make_hero.py`) non è
+  più usata nei README.
 - I dati dell'app stanno in `~/Library/Application Support/Pizzinu/` di ciascun Mac.
 
 ## Regole da non rompere

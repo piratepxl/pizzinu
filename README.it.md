@@ -13,7 +13,7 @@
   <a href="https://t.me/pizzinuapp"><img src="https://img.shields.io/badge/Telegram-@pizzinuapp-26A5E4?logo=telegram&amp;logoColor=white" alt="Telegram"></a>
 </p>
 
-<p align="center"><img src="docs/images/hero.png" width="820" alt="Pizzinu: pizzini sulla scrivania del Mac"></p>
+<p align="center"><img src="docs/images/banner.png" width="820" alt="Pizzinu: il tuo desk reimmaginato"></p>
 
 **Post-it digitali per macOS.** Pizzinu mostra ogni nota come un vero foglietto adesivo
 appoggiato sulla scrivania: finestre flottanti indipendenti, carta disegnata in forma vettoriale

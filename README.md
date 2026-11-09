@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/hero.png" width="820" alt="Pizzinu sticky notes on a Mac desktop">
+  <img src="docs/images/banner.png" width="820" alt="Pizzinu: your desk, reimagined">
 </p>
 
 *Pizzinu* (Sicilian for "pizzino": a small folded note) puts every note on your desktop as a
