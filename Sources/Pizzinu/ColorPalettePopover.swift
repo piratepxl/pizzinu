@@ -9,6 +9,27 @@
 import AppKit
 import PizzinuKit
 
+/// Fondo del popover: pieno, mai «vibrante», ricalcolato quando cambia l'aspetto.
+///
+/// Prima il fondo era un `cgColor` calcolato una volta sola: poteva restare
+/// chiaro dentro un popover scuro, dove macOS disegna i controlli in modo
+/// vibrante (schiarendoli) e le tinte e la scritta uscivano tutte bianche.
+private final class PaletteBackgroundView: NSView {
+    override var allowsVibrancy: Bool { false }
+    override var wantsUpdateLayer: Bool { true }
+
+    override func updateLayer() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        needsDisplay = true
+    }
+}
+
 /// Riquadro di una tinta della palette.
 private final class SwatchButton: NSButton {
     let colorID: NoteColorID
@@ -33,6 +54,10 @@ private final class SwatchButton: NSButton {
     }
 
     override var isOpaque: Bool { false }
+
+    /// Le tinte vanno disegnate così come sono, senza la fusione vibrante del
+    /// popover che le sbiadisce fino al bianco.
+    override var allowsVibrancy: Bool { false }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -110,13 +135,12 @@ final class ColorPaletteViewController: NSViewController {
         let gridWidth = CGFloat(columns) * item + CGFloat(columns - 1) * spacing
         let gridHeight = CGFloat(rows) * item + CGFloat(rows - 1) * spacing
 
-        let container = NSView(frame: NSRect(x: 0, y: 0,
-                                             width: gridWidth + padding * 2,
-                                             height: gridHeight + padding * 2 + 34))
-        container.wantsLayer = true
         // Fondo pieno: il popover è traslucido e le tinte pastello sembrerebbero
         // sbiadite sul contenuto che sta dietro.
-        container.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        let container = PaletteBackgroundView(frame: NSRect(x: 0, y: 0,
+                                                            width: gridWidth + padding * 2,
+                                                            height: gridHeight + padding * 2 + 34))
+        container.wantsLayer = true
 
         for (index, colorID) in NoteColorID.allCases.enumerated() {
             let button = SwatchButton(colorID: colorID)

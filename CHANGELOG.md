@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fixed the color picker sometimes showing blank white squares (and an empty
+  "Custom color…" button) when the Mac is in Dark Mode.
+
 ## 1.2.0 — 2026-11
 
 - **English interface.** Pizzinu now speaks English and Italian and follows the language

@@ -610,6 +610,8 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         let popover = NSPopover()
         popover.contentViewController = swatches
         popover.behavior = .transient
+        // Stesso aspetto (chiaro/scuro) del foglietto da cui si apre.
+        popover.appearance = view.window?.effectiveAppearance
         popover.delegate = self
         content.setControlsEngaged(true)
         popover.show(relativeTo: view.bounds, of: view, preferredEdge: .maxY)
