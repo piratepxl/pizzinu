@@ -414,17 +414,17 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         menu.autoenablesItems = false
 
         if includeEditing {
-            add(to: menu, "Taglia", #selector(NSText.cut(_:)), key: "x")
-            add(to: menu, "Copia", #selector(NSText.copy(_:)), key: "c")
-            add(to: menu, "Incolla", #selector(NSText.paste(_:)), key: "v")
-            add(to: menu, "Seleziona tutto", #selector(NSText.selectAll(_:)), key: "a")
+            add(to: menu, L("Taglia"), #selector(NSText.cut(_:)), key: "x")
+            add(to: menu, L("Copia"), #selector(NSText.copy(_:)), key: "c")
+            add(to: menu, L("Incolla"), #selector(NSText.paste(_:)), key: "v")
+            add(to: menu, L("Seleziona tutto"), #selector(NSText.selectAll(_:)), key: "a")
             menu.addItem(.separator())
         }
 
         let secret = note.isSecret
         // Il colore si offre solo nei temi in cui si vede.
         if !secret && manager.paperShape(for: note).usesNoteColor {
-        let colorItem = NSMenuItem(title: "Colore", action: nil, keyEquivalent: "")
+        let colorItem = NSMenuItem(title: L("Colore"), action: nil, keyEquivalent: "")
         let colorMenu = NSMenu()
         for colorID in NoteColorID.allCases {
             let item = NSMenuItem(title: colorID.displayName, action: #selector(chooseColor(_:)), keyEquivalent: "")
@@ -435,7 +435,7 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
             colorMenu.addItem(item)
         }
         colorMenu.addItem(.separator())
-        let customItem = NSMenuItem(title: "Colore personalizzato…", action: #selector(openCustomColor(_:)), keyEquivalent: "")
+        let customItem = NSMenuItem(title: L("Colore personalizzato…"), action: #selector(openCustomColor(_:)), keyEquivalent: "")
         customItem.target = self
         customItem.state = note.customColorHex != nil ? .on : .off
         colorMenu.addItem(customItem)
@@ -446,7 +446,7 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         // Il pizzino segreto ha tema e carattere fissi: foglio antico e
         // macchina da scrivere.
         if !secret {
-        let themeItem = NSMenuItem(title: "Tema della nota", action: nil, keyEquivalent: "")
+        let themeItem = NSMenuItem(title: L("Tema della nota"), action: nil, keyEquivalent: "")
         let themeMenu = NSMenu()
         for paperShape in PaperShape.allCases {
             let item = NSMenuItem(title: paperShape.displayName, action: #selector(chooseTheme(_:)), keyEquivalent: "")
@@ -460,9 +460,9 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
 
         // Il carattere è una scelta della singola nota: la voce «Predefinito»
         // riporta la nota al carattere delle preferenze.
-        let fontItem = NSMenuItem(title: "Carattere della nota", action: nil, keyEquivalent: "")
+        let fontItem = NSMenuItem(title: L("Carattere della nota"), action: nil, keyEquivalent: "")
         let fontMenu = NSMenu()
-        let defaultFontItem = NSMenuItem(title: "Predefinito", action: #selector(chooseFont(_:)), keyEquivalent: "")
+        let defaultFontItem = NSMenuItem(title: L("Predefinito"), action: #selector(chooseFont(_:)), keyEquivalent: "")
         defaultFontItem.target = self
         defaultFontItem.representedObject = nil
         defaultFontItem.state = note.noteFontName == nil ? .on : .off
@@ -482,45 +482,45 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
 
         menu.addItem(.separator())
 
-        let kindTitle = note.kind == .text ? "Trasforma in checklist" : "Trasforma in nota di testo"
+        let kindTitle = note.kind == .text ? L("Trasforma in checklist") : L("Trasforma in nota di testo")
         add(to: menu, kindTitle, #selector(toggleKind(_:)))
-        let markdownItem = add(to: menu, "Foglio Markdown", #selector(toggleMarkdownAction(_:)))
+        let markdownItem = add(to: menu, L("Foglio Markdown"), #selector(toggleMarkdownAction(_:)))
         markdownItem.state = note.isMarkdown ? .on : .off
         }
 
         menu.addItem(.separator())
 
         if !secret {
-            add(to: menu, "Pizzino segreto (con password)…", #selector(makeSecretAction(_:)))
+            add(to: menu, L("Pizzino segreto (con password)…"), #selector(makeSecretAction(_:)))
         } else if manager.isUnlocked(noteID) {
-            add(to: menu, "Chiudi a chiave", #selector(lockAction(_:)))
-            add(to: menu, "Togli la protezione…", #selector(removeSecretAction(_:)))
+            add(to: menu, L("Chiudi a chiave"), #selector(lockAction(_:)))
+            add(to: menu, L("Togli la protezione…"), #selector(removeSecretAction(_:)))
         } else {
-            add(to: menu, "Apri con la password…", #selector(unlockAction(_:)))
+            add(to: menu, L("Apri con la password…"), #selector(unlockAction(_:)))
         }
 
         menu.addItem(.separator())
 
-        let pinItem = add(to: menu, "Puntina (resta in primo piano)", #selector(togglePinAction(_:)))
+        let pinItem = add(to: menu, L("Puntina (resta in primo piano)"), #selector(togglePinAction(_:)))
         pinItem.state = note.isPinned ? .on : .off
 
-        let reminderTitle = note.reminderAt.map { "Promemoria: \(NoteContentView.describe($0))…" } ?? "Promemoria…"
+        let reminderTitle = note.reminderAt.map { L("Promemoria: %@…", NoteContentView.describe($0)) } ?? L("Promemoria…")
         add(to: menu, reminderTitle, #selector(openReminder(_:)))
         if note.reminderAt != nil {
-            add(to: menu, "Togli il promemoria", #selector(clearReminder(_:)))
+            add(to: menu, L("Togli il promemoria"), #selector(clearReminder(_:)))
         }
 
-        let lockItem = NSMenuItem(title: "Blocca posizione", action: #selector(togglePositionLock(_:)), keyEquivalent: "")
+        let lockItem = NSMenuItem(title: L("Blocca posizione"), action: #selector(togglePositionLock(_:)), keyEquivalent: "")
         lockItem.target = self
         lockItem.state = note.positionLocked ? .on : .off
         menu.addItem(lockItem)
 
         menu.addItem(.separator())
-        add(to: menu, "Duplica", #selector(duplicateNote(_:)))
-        add(to: menu, "Esporta in Markdown…", #selector(exportNote(_:)))
-        add(to: menu, "Archivia", #selector(archiveNote(_:)))
+        add(to: menu, L("Duplica"), #selector(duplicateNote(_:)))
+        add(to: menu, L("Esporta in Markdown…"), #selector(exportNote(_:)))
+        add(to: menu, L("Archivia"), #selector(archiveNote(_:)))
         menu.addItem(.separator())
-        add(to: menu, "Sposta nel cestino", #selector(trashNote(_:)))
+        add(to: menu, L("Sposta nel cestino"), #selector(trashNote(_:)))
 
         return menu
     }
@@ -724,17 +724,17 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
 
     @objc private func makeSecretAction(_ sender: Any?) {
         guard let password = PasswordPrompt.ask(
-            title: "Rendi segreto questo pizzino",
-            message: "Il testo verrà cifrato con questa password e si potrà leggere solo dopo averla inserita. Se la dimentichi, il testo non si recupera: nemmeno Pizzinu può aprirlo.",
-            confirmTitle: "Proteggi", needsConfirmation: true) else { return }
+            title: L("Rendi segreto questo pizzino"),
+            message: L("Il testo verrà cifrato con questa password e si potrà leggere solo dopo averla inserita. Se la dimentichi, il testo non si recupera: nemmeno Pizzinu può aprirlo."),
+            confirmTitle: L("Proteggi"), needsConfirmation: true) else { return }
         manager.makeSecret(id: noteID, password: password)
     }
 
     /// Chiede la password e apre il pizzino; se è sbagliata il foglio trema.
     func requestUnlock() {
-        guard let password = PasswordPrompt.ask(title: "Apri il pizzino segreto",
-                                                message: "Inserisci la password di questo pizzino.",
-                                                confirmTitle: "Apri", needsConfirmation: false) else { return }
+        guard let password = PasswordPrompt.ask(title: L("Apri il pizzino segreto"),
+                                                message: L("Inserisci la password di questo pizzino."),
+                                                confirmTitle: L("Apri"), needsConfirmation: false) else { return }
         switch manager.unlockSecret(id: noteID, password: password) {
         case .opened:
             panel.makeKeyAndOrderFront(nil)
@@ -745,8 +745,8 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
             NSSound.beep()
         case .wait(let seconds):
             content.shake()
-            Alerts.presentInfo(title: "Troppi tentativi",
-                               message: "Per proteggere il pizzino, riprova tra \(seconds) secondi.")
+            Alerts.presentInfo(title: L("Troppi tentativi"),
+                               message: L("Per proteggere il pizzino, riprova tra %ld secondi.", seconds))
         }
     }
 
@@ -769,9 +769,9 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
     }
 
     @objc private func removeSecretAction(_ sender: Any?) {
-        guard Alerts.confirm(title: "Togliere la protezione?",
-                             message: "Il pizzino tornerà una nota normale e il testo sarà salvato senza cifratura.",
-                             confirmTitle: "Togli la protezione") else { return }
+        guard Alerts.confirm(title: L("Togliere la protezione?"),
+                             message: L("Il pizzino tornerà una nota normale e il testo sarà salvato senza cifratura."),
+                             confirmTitle: L("Togli la protezione")) else { return }
         manager.removeSecret(id: noteID)
     }
 

@@ -89,7 +89,7 @@ struct MainWindowView: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-            .help("Ordina: \(model.query.sort.displayName)")
+            .help(L("Ordina: %@", model.query.sort.displayName))
             if model.scope == .trash && !model.notes.isEmpty {
                 Button(role: .destructive) {
                     model.emptyTrash()
@@ -106,13 +106,13 @@ struct MainWindowView: View {
 
     private var subtitle: String {
         let count = model.notes.count
-        let noun = count == 1 ? "pizzino" : "pizzini"
-        if !model.query.text.isEmpty { return "\(count) \(noun) trovati" }
+        let noun = count == 1 ? L("pizzino") : L("pizzini")
+        if !model.query.text.isEmpty { return L("%ld %@ trovati", count, noun) }
         switch model.scope {
-        case .active: return "\(count) \(noun) · doppio clic per aprirlo"
-        case .archived: return "\(count) \(noun) messi da parte"
-        case .trash: return "\(count) \(noun) · si possono ancora recuperare"
-        case .all: return "\(count) \(noun) in tutto"
+        case .active: return L("%ld %@ · doppio clic per aprirlo", count, noun)
+        case .archived: return L("%ld %@ messi da parte", count, noun)
+        case .trash: return L("%ld %@ · si possono ancora recuperare", count, noun)
+        case .all: return L("%ld %@ in tutto", count, noun)
         }
     }
 
@@ -202,12 +202,12 @@ struct MainWindowView: View {
     }
 
     private var emptyMessage: String {
-        if !model.query.text.isEmpty { return "Nessun pizzino con «\(model.query.text)»" }
+        if !model.query.text.isEmpty { return L("Nessun pizzino con «%@»", model.query.text) }
         switch model.scope {
-        case .active: return "Tutto a posto? Non c'è niente da ricordare."
-        case .archived: return "Niente messo da parte."
-        case .trash: return "Il cestino è vuoto."
-        case .all: return "Ancora nessun pizzino."
+        case .active: return L("Tutto a posto? Non c'è niente da ricordare.")
+        case .archived: return L("Niente messo da parte.")
+        case .trash: return L("Il cestino è vuoto.")
+        case .all: return L("Ancora nessun pizzino.")
         }
     }
 }
@@ -220,10 +220,10 @@ private struct ArchiveSidebar: View {
 
     static func title(for scope: NoteScope) -> String {
         switch scope {
-        case .active: "Sulla scrivania"
-        case .archived: "Archiviate"
-        case .trash: "Cestino"
-        case .all: "Tutte le note"
+        case .active: L("Sulla scrivania")
+        case .archived: L("Archiviate")
+        case .trash: L("Cestino")
+        case .all: L("Tutte le note")
         }
     }
 
@@ -317,7 +317,7 @@ private struct ArchiveSidebar: View {
 
     private func footerButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: icon)
+            Label(L(title), systemImage: icon)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .padding(.vertical, 4)
@@ -364,7 +364,7 @@ private struct NoteListRow: View {
                     }
                 }
             VStack(alignment: .leading, spacing: 2) {
-                Text(note.kind == .checklist && note.title.isEmpty ? "Checklist" : note.displayTitle.replacingOccurrences(of: "# ", with: ""))
+                Text(note.kind == .checklist && note.title.isEmpty ? L("Checklist") : note.displayTitle.replacingOccurrences(of: "# ", with: ""))
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)
                 if let preview = secondLine {
@@ -409,7 +409,7 @@ private struct NoteListRow: View {
     /// Seconda riga: il testo dopo il titolo, oppure le prime voci della checklist.
     private var secondLine: String? {
         if note.kind == .checklist {
-            return note.checklistTotalCount > 0 ? "Checklist · \(note.checklistTotalCount) voci" : nil
+            return note.checklistTotalCount > 0 ? L("Checklist · %ld voci", note.checklistTotalCount) : nil
         }
         let lines = note.content.split(whereSeparator: \.isNewline).map { String($0) }
         let rest = lines.dropFirst().joined(separator: " ")
@@ -526,7 +526,7 @@ private struct NoteCard: View {
     /// Anteprima senza i segni del Markdown, perché si legga come sul foglio.
     private var cleanText: String {
         let text = note.content.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return "Nota vuota" }
+        guard !text.isEmpty else { return L("Nota vuota") }
         guard note.isMarkdown else { return text }
         return text.split(separator: "\n", omittingEmptySubsequences: false).map { line -> String in
             var l = String(line)
@@ -599,7 +599,7 @@ private struct NoteInspector: View {
                 ForEach(tree.flattened, id: \.item.id) { entry in
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Image(systemName: entry.item.isDone ? "checkmark.square.fill" : "square")
-                        Text(entry.item.text.isEmpty ? "Voce senza testo" : entry.item.text)
+                        Text(entry.item.text.isEmpty ? L("Voce senza testo") : entry.item.text)
                             .strikethrough(entry.item.isDone)
                             .opacity(entry.item.isDone ? 0.55 : 1)
                     }
@@ -607,7 +607,7 @@ private struct NoteInspector: View {
                 }
                 .font(.system(size: 14, weight: .medium, design: .rounded))
             } else {
-                Text(note.content.isEmpty ? "Nota vuota" : note.content)
+                Text(note.content.isEmpty ? L("Nota vuota") : note.content)
                     .font(Font(Theme.noteFont(named: note.noteFontName, size: 17, weight: .medium)))
                     .textSelection(.enabled)
             }
@@ -627,12 +627,12 @@ private struct NoteInspector: View {
     private var chips: some View {
         VStack(alignment: .leading, spacing: 8) {
             chip("paintpalette", manager.paperShape(for: note).displayName)
-            chip("clock", "Modificata \(note.updatedAt.formatted(date: .abbreviated, time: .shortened))")
-            chip("calendar", "Creata \(note.createdAt.formatted(date: .abbreviated, time: .shortened))")
+            chip("clock", L("Modificata %@", note.updatedAt.formatted(date: .abbreviated, time: .shortened)))
+            chip("calendar", L("Creata %@", note.createdAt.formatted(date: .abbreviated, time: .shortened)))
             chip(stateIcon, stateDescription)
-            if note.isPinned { chip("pin.fill", "Con la puntina: resta in primo piano") }
-            if let reminder = note.reminderAt { chip("alarm", "Promemoria \(NoteContentView.describe(reminder))") }
-            if note.isMarkdown { chip("number", "Foglio Markdown") }
+            if note.isPinned { chip("pin.fill", L("Con la puntina: resta in primo piano")) }
+            if let reminder = note.reminderAt { chip("alarm", L("Promemoria %@", NoteContentView.describe(reminder))) }
+            if note.isMarkdown { chip("number", L("Foglio Markdown")) }
         }
     }
 
@@ -653,9 +653,9 @@ private struct NoteInspector: View {
 
     private var stateDescription: String {
         switch note.lifecycle {
-        case .active: note.isVisible ? "Sul desktop" : "Nascosta"
-        case .archived: "Archiviata"
-        case .trashed: "Nel cestino"
+        case .active: note.isVisible ? L("Sul desktop") : L("Nascosta")
+        case .archived: L("Archiviata")
+        case .trashed: L("Nel cestino")
         }
     }
 
@@ -686,12 +686,12 @@ private struct NoteInspector: View {
         Group {
             if prominent {
                 Button(role: role, action: action) {
-                    Label(title, systemImage: icon).frame(maxWidth: .infinity)
+                    Label(L(title), systemImage: icon).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
             } else {
                 Button(role: role, action: action) {
-                    Label(title, systemImage: icon).frame(maxWidth: .infinity)
+                    Label(L(title), systemImage: icon).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
             }
@@ -716,7 +716,7 @@ private struct NoteContextMenu: View {
             }
             Button("Duplica") { model.duplicate(note) }
             Divider()
-            Button(note.isArchived ? "Ripristina dall'archivio" : "Archivia") {
+            Button(note.isArchived ? L("Ripristina dall'archivio") : L("Archivia")) {
                 model.archive(note, archived: !note.isArchived)
             }
             Button("Sposta nel cestino") { model.moveToTrash(note) }

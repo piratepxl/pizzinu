@@ -273,7 +273,7 @@ final class NoteManager: ObservableObject {
         guard var copy = note(id: id) else { return }
         let originalID = copy.id
         copy.id = UUID()
-        copy.title = copy.title.isEmpty ? "" : copy.title + " (copia)"
+        copy.title = copy.title.isEmpty ? "" : copy.title + L(" (copia)")
         copy.createdAt = Date()
         copy.updatedAt = Date()
         copy.sourceKey = nil

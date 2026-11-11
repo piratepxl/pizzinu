@@ -124,16 +124,16 @@ final class Updater: ObservableObject {
             } else {
                 phase = .idle
                 if userInitiated {
-                    Alerts.presentInfo(title: "Pizzinu è aggiornato",
-                                       message: "Hai l'ultima versione, la \(currentVersion).")
+                    Alerts.presentInfo(title: L("Pizzinu è aggiornato"),
+                                       message: L("Hai l'ultima versione, la %@.", currentVersion.description))
                 }
             }
         } catch {
             phase = .idle
             PizzinuLog.app.error("Controllo aggiornamenti non riuscito: \(String(describing: error))")
             if userInitiated {
-                Alerts.presentWarning(title: "Non riesco a controllare gli aggiornamenti",
-                                      message: "GitHub non risponde oppure l'ultima versione non è ancora pronta. Riprova tra poco: la trovi anche su piratepixel.it/pizzinu.")
+                Alerts.presentWarning(title: L("Non riesco a controllare gli aggiornamenti"),
+                                      message: L("GitHub non risponde oppure l'ultima versione non è ancora pronta. Riprova tra poco: la trovi anche su piratepixel.it/pizzinu."))
             }
         }
     }
@@ -158,10 +158,10 @@ final class Updater: ObservableObject {
             let current = Bundle.main.bundleURL.standardizedFileURL
             let folder = current.deletingLastPathComponent()
             if current.path.contains("/AppTranslocation/") {
-                throw InstallFailure("Pizzinu è stata aperta direttamente dalla cartella Download. Spostala in Applicazioni, riaprila e riprova.")
+                throw InstallFailure(L("Pizzinu è stata aperta direttamente dalla cartella Download. Spostala in Applicazioni, riaprila e riprova."))
             }
             guard FileManager.default.isWritableFile(atPath: folder.path) else {
-                throw InstallFailure("Non ho il permesso di sostituire Pizzinu in «\(folder.path)». Scarica la nuova versione dalla pagina di GitHub e sostituiscila a mano.")
+                throw InstallFailure(L("Non ho il permesso di sostituire Pizzinu in «%@». Scarica la nuova versione dalla pagina di GitHub e sostituiscila a mano.", folder.path))
             }
 
             // 1. Download dello zip (con avanzamento) e della firma.
@@ -175,7 +175,7 @@ final class Updater: ObservableObject {
             // 2. Firma.
             phase = .verifying(release)
             guard UpdateSignature.isValid(zipData, signature: signature, publicKey: Self.publicKey) else {
-                throw InstallFailure("La firma dell'aggiornamento non è valida, quindi non l'ho installato. Può essere un download rovinato: riprova più tardi.")
+                throw InstallFailure(L("La firma dell'aggiornamento non è valida, quindi non l'ho installato. Può essere un download rovinato: riprova più tardi."))
             }
 
             // 3. Estrazione accanto all'app attuale (stesso disco: lo scambio è istantaneo).
@@ -214,12 +214,12 @@ final class Updater: ObservableObject {
         } catch let failure as InstallFailure {
             phase = .failed(release, message: failure.message)
         } catch UpdateError.wrongBundle {
-            phase = .failed(release, message: "Lo zip scaricato non contiene Pizzinu. Non l'ho installato.")
+            phase = .failed(release, message: L("Lo zip scaricato non contiene Pizzinu. Non l'ho installato."))
         } catch UpdateError.wrongVersion(let expected, let found) {
-            phase = .failed(release, message: "Lo zip contiene la versione \(found) invece della \(expected). Non l'ho installato.")
+            phase = .failed(release, message: L("Lo zip contiene la versione %@ invece della %@. Non l'ho installato.", "\(found)", "\(expected)"))
         } catch {
             PizzinuLog.app.error("Aggiornamento non riuscito: \(String(describing: error))")
-            phase = .failed(release, message: "Il download non è andato a buon fine. Controlla la connessione e riprova.")
+            phase = .failed(release, message: L("Il download non è andato a buon fine. Controlla la connessione e riprova."))
         }
     }
 

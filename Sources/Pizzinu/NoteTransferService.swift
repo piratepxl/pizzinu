@@ -24,9 +24,9 @@ enum NoteTransferService {
         manager.flushSaves()
 
         let panel = NSOpenPanel()
-        panel.title = "Esporta le note di Pizzinu in Markdown"
-        panel.message = "Scegli dove creare la cartella: ogni pizzino diventa un file .md, leggibile da qualunque editor."
-        panel.prompt = "Esporta qui"
+        panel.title = L("Esporta le note di Pizzinu in Markdown")
+        panel.message = L("Scegli dove creare la cartella: ogni pizzino diventa un file .md, leggibile da qualunque editor.")
+        panel.prompt = L("Esporta qui")
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.canCreateDirectories = true
@@ -38,14 +38,14 @@ enum NoteTransferService {
         do {
             let count = try NoteExporter(store: manager.store).export(to: folder, scope: .all)
             PizzinuLog.transfer.info("Esportazione completata: \(count, privacy: .public) note")
-            if Alerts.confirm(title: "Esportazione completata",
-                              message: "\(count) pizzini scritti nella cartella «\(folder.lastPathComponent)».",
-                              confirmTitle: "Mostra nel Finder") {
+            if Alerts.confirm(title: L("Esportazione completata"),
+                              message: L("%ld pizzini scritti nella cartella «%@».", count, folder.lastPathComponent),
+                              confirmTitle: L("Mostra nel Finder")) {
                 NSWorkspace.shared.activateFileViewerSelecting([folder])
             }
         } catch {
             PizzinuLog.transfer.error("Esportazione non riuscita: \(String(describing: error))")
-            Alerts.presentError(title: "Esportazione non riuscita", message: error.localizedDescription)
+            Alerts.presentError(title: L("Esportazione non riuscita"), message: error.localizedDescription)
         }
     }
 
@@ -56,7 +56,7 @@ enum NoteTransferService {
         manager.flushSaves()
 
         let panel = NSSavePanel()
-        panel.title = "Esporta il pizzino in Markdown"
+        panel.title = L("Esporta il pizzino in Markdown")
         panel.allowedContentTypes = [markdownTypes[0]]
         panel.canCreateDirectories = true
         let items = note.kind == .checklist ? manager.checklistItems(noteID: id) : []
@@ -66,7 +66,7 @@ enum NoteTransferService {
         do {
             try NoteExporter(store: manager.store).export(noteID: id, to: url)
         } catch {
-            Alerts.presentError(title: "Esportazione non riuscita", message: error.localizedDescription)
+            Alerts.presentError(title: L("Esportazione non riuscita"), message: error.localizedDescription)
         }
     }
 
@@ -75,9 +75,9 @@ enum NoteTransferService {
         NSApp.activate(ignoringOtherApps: true)
 
         let panel = NSOpenPanel()
-        panel.title = "Importa in Pizzinu"
-        panel.message = "Scegli file Markdown o una cartella che li contiene."
-        panel.prompt = "Importa"
+        panel.title = L("Importa in Pizzinu")
+        panel.message = L("Scegli file Markdown o una cartella che li contiene.")
+        panel.prompt = L("Importa")
         panel.allowedContentTypes = markdownTypes
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = true
@@ -88,34 +88,34 @@ enum NoteTransferService {
             let importer = NoteImporter(store: manager.store, source: .files(panel.urls))
             let preview = try importer.preview()
             guard !preview.candidates.isEmpty else {
-                Alerts.presentInfo(title: "Nessun pizzino da importare", message: "I file scelti non contengono note.")
+                Alerts.presentInfo(title: L("Nessun pizzino da importare"), message: L("I file scelti non contengono note."))
                 return
             }
 
-            var details = "\(preview.newCount) nuovi · \(preview.duplicateCount) già presenti · "
-                + "\(preview.locallyNewerCount) più recenti su questo Mac."
+            var details = L("%ld nuovi · %ld già presenti · %ld più recenti su questo Mac.",
+                            preview.newCount, preview.duplicateCount, preview.locallyNewerCount)
             if !preview.warnings.isEmpty {
                 details += "\n\n" + preview.warnings.prefix(5).joined(separator: "\n")
             }
 
-            guard Alerts.confirm(title: "Importare \(preview.candidates.count) pizzini?",
+            guard Alerts.confirm(title: L("Importare %ld pizzini?", preview.candidates.count),
                                  message: details,
-                                 confirmTitle: "Importa") else { return }
+                                 confirmTitle: L("Importa")) else { return }
 
             let report = try importer.commit(preview, selection: preview.defaultSelection)
             manager.reload()
             manager.rescheduleReminders()
             PizzinuLog.transfer.info("Importazione completata: \(report.total, privacy: .public) note")
-            Alerts.presentInfo(title: "Importazione completata", message: report.summary)
+            Alerts.presentInfo(title: L("Importazione completata"), message: report.summary)
         } catch {
             PizzinuLog.transfer.error("Importazione non riuscita: \(String(describing: error))")
-            Alerts.presentError(title: "Importazione non riuscita", message: error.localizedDescription)
+            Alerts.presentError(title: L("Importazione non riuscita"), message: error.localizedDescription)
         }
     }
 
     private static func defaultFolderName() -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "it_IT")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd HH.mm"
         return "Pizzinu \(formatter.string(from: Date()))"
     }

@@ -19,7 +19,7 @@ final class UpdateWindowController: NSWindowController, NSWindowDelegate {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 420),
                               styleMask: [.titled, .closable],
                               backing: .buffered, defer: false)
-        window.title = "Aggiornamento di Pizzinu"
+        window.title = L("Aggiornamento di Pizzinu")
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: UpdateView(updater: updater))
         window.center()
@@ -63,7 +63,7 @@ struct UpdateView: View {
             if let release {
                 Text("Novità").font(.headline)
                 ScrollView {
-                    Text(release.notes.isEmpty ? "Correzioni e miglioramenti." : release.notes)
+                    Text(release.notes.isEmpty ? L("Correzioni e miglioramenti.") : release.notes)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                         .padding(12)
@@ -93,12 +93,12 @@ struct UpdateView: View {
     }
 
     private var headline: String {
-        guard let release else { return "Aggiornamento di Pizzinu" }
-        return "È disponibile Pizzinu \(release.version)"
+        guard let release else { return L("Aggiornamento di Pizzinu") }
+        return L("È disponibile Pizzinu %@", release.version.description)
     }
 
     private var subtitle: String {
-        "Hai la versione \(updater.currentVersion). L'aggiornamento richiede pochi secondi e le tue note restano dove sono."
+        L("Hai la versione %@. L'aggiornamento richiede pochi secondi e le tue note restano dove sono.", updater.currentVersion.description)
     }
 
     @ViewBuilder private var status: some View {
@@ -106,7 +106,7 @@ struct UpdateView: View {
         case .downloading(_, let progress):
             VStack(alignment: .leading, spacing: 6) {
                 ProgressView(value: progress)
-                Text("Scarico l'aggiornamento… \(Int(progress * 100)) %").font(.caption).foregroundStyle(.secondary)
+                Text(L("Scarico l'aggiornamento… %ld %%", Int(progress * 100))).font(.caption).foregroundStyle(.secondary)
             }
         case .verifying:
             ProgressView { Text("Controllo la firma digitale…").font(.caption) }
@@ -148,6 +148,6 @@ struct UpdateView: View {
     }
 
     private func close() {
-        NSApp.windows.first { $0.title == "Aggiornamento di Pizzinu" }?.close()
+        NSApp.windows.first { $0.title == L("Aggiornamento di Pizzinu") }?.close()
     }
 }

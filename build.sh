@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 APP_NAME="Pizzinu"
 BUNDLE_ID="it.pizzinu.app"
-VERSION="1.1.1"
+VERSION="1.2.0"
 OUT="build/${APP_NAME}.app"
 CONFIG="${CONFIG:-release}"
 
@@ -67,6 +67,11 @@ for image in Pin.png AppIconMark.png; do
   if [ -f "Resources/$image" ]; then cp "Resources/$image" "$STAGE/Contents/Resources/$image"; fi
 done
 
+# Lingue dell'interfaccia (italiano e inglese): vedi PizzinuKit/Localization.swift.
+for lproj in Resources/*.lproj; do
+  if [ -d "$lproj" ]; then cp -R "$lproj" "$STAGE/Contents/Resources/"; fi
+done
+
 # Caratteri delle note: quelli della cartella Fonts del progetto entrano nel
 # bundle. L'applicazione li legge anche da cartelle esterne (vedi FontLibrary).
 if [ -d "Fonts" ]; then
@@ -97,7 +102,7 @@ cat > "$STAGE/Contents/Info.plist" <<PLIST
 	<key>NSSupportsAutomaticTermination</key><false/>
 	<key>NSSupportsSuddenTermination</key><false/>
 	<key>CFBundleLocalizations</key><array><string>it</string><string>en</string></array>
-	<key>CFBundleDevelopmentRegion</key><string>it</string>
+	<key>CFBundleDevelopmentRegion</key><string>en</string>
 	${ICON_KEY}
 </dict>
 </plist>

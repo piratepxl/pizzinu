@@ -13,6 +13,31 @@
 import AppKit
 import PizzinuKit
 
+/// Aspetto della carta: bordo e grana.
+///
+/// - Bordo: `.current` è il filo scuro (colore della carta −22 %) dei temi
+///   storici; `.tonal` è il bordo tenue scelto dall'utente l'11 nov 2026 per il
+///   tema «Morbida», in linea con macOS di oggi (il contorno lo dà l'ombra).
+/// - Grana: per ora nessun tema la usa. È pronta per i temi delle occasioni
+///   (`strong`), più marcata; i temi normali restano lisci, come chiede il
+///   linguaggio visivo di Apple.
+struct PaperFinish: Equatable {
+    enum Edge: Equatable { case current, none, tonal }
+    enum Grain: Equatable { case none, subtle, fibers, strong }
+    var edge: Edge = .current
+    var grain: Grain = .none
+
+    static func standard(for shape: PaperShape) -> PaperFinish {
+        switch shape {
+        case .soft: PaperFinish(edge: .tonal)
+        default: PaperFinish()
+        }
+    }
+
+    /// Solo per lo strumento di istantanee: forza un aspetto sul tema «Morbida».
+    @MainActor static var snapshotOverride: PaperFinish?
+}
+
 final class StickySurfaceView: NSView {
     /// Misure derivate del foglietto.
     var metrics = StickyMetrics.make(paperSize: Note.defaultPaperSize, mode: .realistic)
@@ -100,10 +125,113 @@ final class StickySurfaceView: NSView {
             drawSealedLetter(in: context, path: paperPath, rect: paperRect)
         }
 
+        var look = PaperFinish.standard(for: shape)
+        if shape == .soft, let override = PaperFinish.snapshotOverride { look = override }
+        if look.grain != .none {
+            drawPaperGrain(in: context, path: paperPath, rect: paperRect, grain: look.grain)
+        }
         if shape != .liquidGlass {
-            drawPaperEdge(in: context, path: paperPath)
+            switch look.edge {
+            case .current: drawPaperEdge(in: context, path: paperPath)
+            case .none: break
+            case .tonal: drawTonalEdge(in: context, path: paperPath)
+            }
         }
     }
+
+    // MARK: - Prove sulla carta (grana e bordo)
+
+    /// Bordo appena accennato: lo stesso colore della carta, poco più scuro e
+    /// quasi trasparente, sottile. Il contorno lo disegna soprattutto l'ombra.
+    private func drawTonalEdge(in context: CGContext, path: CGPath) {
+        context.saveGState()
+        context.addPath(path)
+        context.setStrokeColor(edgeColor.withAlphaComponent(0.28).cgColor)
+        context.setLineWidth(0.5)
+        context.setLineJoin(.round)
+        context.strokePath()
+        context.restoreGState()
+    }
+
+    /// Ruvidità della carta: una trama di granelli chiari e scuri (generata dal
+    /// codice, ripetuta a piastrelle, nessuna immagine nel pacchetto) fusa in
+    /// «sovrapposizione», così il colore della nota resta quello; con `fibers`
+    /// anche filamenti brevi e chiari, come le fibre della carta vera.
+    private func drawPaperGrain(in context: CGContext, path: CGPath, rect: CGRect, grain: PaperFinish.Grain) {
+        guard let tile = Self.grainTile else { return }
+        let strong = grain == .strong
+        let fibers = grain == .fibers || strong
+        context.saveGState()
+        defer { context.restoreGState() }
+        context.addPath(path)
+        context.clip()
+        context.setBlendMode(.overlay)
+        context.setAlpha(strong ? 1 : 0.55)
+        let side = Self.grainTileSide
+        context.draw(tile, in: CGRect(x: rect.minX, y: rect.minY, width: side, height: side), byTiling: true)
+        context.setAlpha(1)
+        context.setBlendMode(.normal)
+        guard fibers else { return }
+        var random = SeededRandom(seed: UInt64(rect.width * 31 + rect.height * 17))
+        let count = Int(rect.width * rect.height / (strong ? 140 : 260))
+        context.setLineCap(.round)
+        for index in 0..<count {
+            let start = CGPoint(x: rect.minX + random.next() * rect.width, y: rect.minY + random.next() * rect.height)
+            let length = 3 + random.next() * 9
+            let angle = random.next() * .pi * 2
+            let bend = (random.next() - 0.5) * length * 0.8
+            let end = CGPoint(x: start.x + cos(angle) * length, y: start.y + sin(angle) * length)
+            let control = CGPoint(x: (start.x + end.x) / 2 - sin(angle) * bend, y: (start.y + end.y) / 2 + cos(angle) * bend)
+            context.beginPath()
+            context.move(to: start)
+            context.addQuadCurve(to: end, control: control)
+            let light = index % 3 != 0
+            let lightAlpha: CGFloat = strong ? 0.30 : 0.16
+            let darkAlpha: CGFloat = strong ? 0.10 : 0.05
+            context.setStrokeColor(light ? NSColor.white.withAlphaComponent(lightAlpha).cgColor
+                                         : NSColor.black.withAlphaComponent(darkAlpha).cgColor)
+            context.setLineWidth(light ? (strong ? 0.6 : 0.45) : 0.35)
+            context.strokePath()
+        }
+    }
+
+    /// Lato della piastrella di grana in punti (la bitmap ha il doppio dei
+    /// pixel: un granello è mezzo punto sugli schermi Retina).
+    private static let grainTileSide: CGFloat = 128
+
+    /// Trama generata una volta: rumore fine + macchie larghe e tenui
+    /// (la carta non è mai uniforme). Grigio medio = nessun effetto in
+    /// sovrapposizione; più chiaro o più scuro = granello. 64 KB in memoria.
+    private static let grainTile: CGImage? = {
+        let size = Int(grainTileSide * 2)
+        var random = SeededRandom(seed: 7_531)
+        // Macchie larghe: rumore a bassa risoluzione interpolato.
+        let coarse = 16
+        var blotches = [Double](repeating: 0, count: coarse * coarse)
+        for index in blotches.indices { blotches[index] = random.next() - 0.5 }
+        func blotch(_ x: Int, _ y: Int) -> Double {
+            let fx = Double(x) / Double(size) * Double(coarse), fy = Double(y) / Double(size) * Double(coarse)
+            let x0 = Int(fx) % coarse, y0 = Int(fy) % coarse
+            let x1 = (x0 + 1) % coarse, y1 = (y0 + 1) % coarse
+            let tx = fx - floor(fx), ty = fy - floor(fy)
+            let sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty)
+            let top = blotches[y0 * coarse + x0] * (1 - sx) + blotches[y0 * coarse + x1] * sx
+            let bottom = blotches[y1 * coarse + x0] * (1 - sx) + blotches[y1 * coarse + x1] * sx
+            return top * (1 - sy) + bottom * sy
+        }
+        var pixels = [UInt8](repeating: 128, count: size * size)
+        for y in 0..<size {
+            for x in 0..<size {
+                let fine = (random.next() + random.next() - 1) * 26
+                let value = 128 + fine + blotch(x, y) * 22
+                pixels[y * size + x] = UInt8(max(0, min(255, value)))
+            }
+        }
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData) else { return nil }
+        return CGImage(width: size, height: size, bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: size,
+                       space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGBitmapInfo(rawValue: 0),
+                       provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+    }()
 
     /// Ombra proiettata dalla carta. Viene disegnata in un passaggio separato:
     /// prima il contorno con l'ombra attiva, poi il gradiente sopra.
@@ -875,5 +1003,18 @@ final class StickySurfaceView: NSView {
             ? [.drawsBeforeStartLocation, .drawsAfterEndLocation]
             : []
         context.drawLinearGradient(gradient, start: start, end: end, options: options)
+    }
+}
+
+
+/// Generatore pseudo-casuale con seme fisso: la grana e le fibre sono sempre
+/// le stesse per la stessa nota, non cambiano a ogni ridisegno.
+private struct SeededRandom {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed &+ 0x9E37_79B9_7F4A_7C15 }
+    /// Numero fra 0 e 1.
+    mutating func next() -> Double {
+        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+        return Double(state >> 11) / Double(1 << 53)
     }
 }

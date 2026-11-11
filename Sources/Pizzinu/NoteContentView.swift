@@ -156,7 +156,7 @@ final class NoteContentView: NSView {
             return
         }
         reminderLabel.isHidden = false
-        reminderLabel.stringValue = ringing ? "⏰ Adesso!" : "⏰ " + Self.describe(date)
+        reminderLabel.stringValue = ringing ? "⏰ " + L("Adesso!") : "⏰ " + Self.describe(date)
         reminderLabel.textColor = ringing ? .systemRed : palette.secondaryText.nsColor
         needsLayout = true
     }
@@ -166,8 +166,8 @@ final class NoteContentView: NSView {
         let calendar = Calendar.current
         let time = date.formatted(date: .omitted, time: .shortened)
         if calendar.isDateInToday(date) { return time }
-        if calendar.isDateInTomorrow(date) { return "domani \(time)" }
-        let day = date.formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "it_IT")))
+        if calendar.isDateInTomorrow(date) { return L("domani %@", time) }
+        let day = date.formatted(.dateTime.day().month(.abbreviated))
         return "\(day) \(time)"
     }
 
@@ -285,8 +285,8 @@ final class NoteContentView: NSView {
         textEditor?.apply(font: Theme.noteFont(named: noteFontName, size: fontSize),
                           textColor: ink,
                           insertionColor: ink,
-                          placeholder: isSecret ? "Scrivi il tuo segreto…" : "Cosa non vuoi dimenticare?",
-                          hint: "Doppio clic per scrivere")
+                          placeholder: isSecret ? L("Scrivi il tuo segreto…") : L("Cosa non vuoi dimenticare?"),
+                          hint: L("Doppio clic per scrivere"))
         checklistEditor?.apply(fontSize: fontSize, textColor: palette.text, fontName: noteFontName)
         markdownEditor?.apply(source: note.content,
                               fontName: noteFontName,
@@ -364,7 +364,7 @@ final class NoteContentView: NSView {
         view.layer?.shadowOpacity = 0.32
         view.layer?.shadowRadius = 1.6
         view.layer?.shadowOffset = CGSize(width: -1.5, height: -2.5)
-        view.setAccessibilityLabel("Puntina: la nota resta in primo piano")
+        view.setAccessibilityLabel(L("Puntina: la nota resta in primo piano"))
         addSubview(view, positioned: .below, relativeTo: controls)
         return view
     }

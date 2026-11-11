@@ -61,22 +61,22 @@ public enum PaperShape: String, Codable, CaseIterable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .soft: "Morbida"
-        case .ruffled: "Increspata"
-        case .crumpled: "Arricciata"
-        case .peeled: "Staccata"
-        case .taped: "Nastrata"
-        case .clipped: "Graffettata"
-        case .round: "Rotonda"
-        case .tornRuled: "Strappata"
-        case .ribbonBlue: "Segnalibro"
-        case .graphPinned: "Quadrettata"
-        case .ledgerTaped: "Blocco Lungo"
-        case .spiralPad: "Spiralata"
-        case .clippedStack: "Biglietto Doppio"
-        case .liquidGlass: "Liquid Glass"
-        case .secretSheet: "Foglio segreto"
-        case .secretSealed: "Pizzino sigillato"
+        case .soft: L("Morbida")
+        case .ruffled: L("Increspata")
+        case .crumpled: L("Arricciata")
+        case .peeled: L("Staccata")
+        case .taped: L("Nastrata")
+        case .clipped: L("Graffettata")
+        case .round: L("Rotonda")
+        case .tornRuled: L("Strappata")
+        case .ribbonBlue: L("Segnalibro")
+        case .graphPinned: L("Quadrettata")
+        case .ledgerTaped: L("Blocco Lungo")
+        case .spiralPad: L("Spiralata")
+        case .clippedStack: L("Biglietto Doppio")
+        case .liquidGlass: L("Liquid Glass")
+        case .secretSheet: L("Foglio segreto")
+        case .secretSealed: L("Pizzino sigillato")
         }
     }
 

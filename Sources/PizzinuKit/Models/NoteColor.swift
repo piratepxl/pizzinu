@@ -27,18 +27,18 @@ public enum NoteColorID: String, Codable, CaseIterable, Sendable {
     /// Nome leggibile in italiano.
     public var displayName: String {
         switch self {
-        case .lemon: "Giallo limone"
-        case .pastelYellow: "Giallo pastello"
-        case .pink: "Rosa"
-        case .fuchsia: "Fucsia"
-        case .orange: "Arancione"
-        case .lime: "Verde lime"
-        case .pastelGreen: "Verde pastello"
-        case .skyBlue: "Azzurro"
-        case .blue: "Blu"
-        case .purple: "Viola"
-        case .paper: "Bianco carta"
-        case .lightGray: "Grigio chiaro"
+        case .lemon: L("Giallo limone")
+        case .pastelYellow: L("Giallo pastello")
+        case .pink: L("Rosa")
+        case .fuchsia: L("Fucsia")
+        case .orange: L("Arancione")
+        case .lime: L("Verde lime")
+        case .pastelGreen: L("Verde pastello")
+        case .skyBlue: L("Azzurro")
+        case .blue: L("Blu")
+        case .purple: L("Viola")
+        case .paper: L("Bianco carta")
+        case .lightGray: L("Grigio chiaro")
         }
     }
 

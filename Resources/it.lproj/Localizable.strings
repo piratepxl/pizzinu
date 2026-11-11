@@ -1,0 +1,4 @@
+/* Italiano: i testi del codice sono già in italiano e fanno da chiave.
+   Qui solo le chiavi che non sono testo italiano (stessa parola, due significati). */
+"menu.annulla-modifica" = "Annulla";
+"menu.ripeti-modifica" = "Ripristina";

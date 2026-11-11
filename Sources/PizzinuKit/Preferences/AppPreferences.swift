@@ -23,9 +23,9 @@ public enum AppearanceMode: String, Codable, CaseIterable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .system: "Come il sistema"
-        case .light: "Chiaro"
-        case .dark: "Scuro"
+        case .system: L("Come il sistema")
+        case .light: L("Chiaro")
+        case .dark: L("Scuro")
         }
     }
 }

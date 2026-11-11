@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 — 2026-11
+
+- **English interface.** Pizzinu now speaks English and Italian and follows the language
+  of your Mac: menus, settings, the archive, alerts, reminders, themes and colors.
+  Any language other than Italian gets English. Dates and weekdays follow your Mac too.
+- **Softer paper edge on the Soft theme.** The dark outline is gone: a barely visible edge in
+  the color of the paper, and the shadow does the rest, as on a real sticky note.
+
 ## 1.1.1 — 2026-11
 
 - Fixed a crash on Markdown sheets: when a task or a link was scrolled out of view,

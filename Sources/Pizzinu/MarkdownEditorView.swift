@@ -324,12 +324,12 @@ final class MarkdownEditorView: NSView, NSTextViewDelegate {
         guard isEditing else { return }
         switch command {
         case .heading: cycleHeading()
-        case .bold: wrapSelection(prefix: "**", suffix: "**", placeholder: "grassetto")
-        case .italic: wrapSelection(prefix: "*", suffix: "*", placeholder: "corsivo")
-        case .strike: wrapSelection(prefix: "~~", suffix: "~~", placeholder: "barrato")
-        case .highlight: wrapSelection(prefix: "==", suffix: "==", placeholder: "evidenziato")
-        case .code: wrapSelection(prefix: "`", suffix: "`", placeholder: "codice")
-        case .link: wrapSelection(prefix: "[", suffix: "](https://)", placeholder: "collegamento")
+        case .bold: wrapSelection(prefix: "**", suffix: "**", placeholder: L("grassetto"))
+        case .italic: wrapSelection(prefix: "*", suffix: "*", placeholder: L("corsivo"))
+        case .strike: wrapSelection(prefix: "~~", suffix: "~~", placeholder: L("barrato"))
+        case .highlight: wrapSelection(prefix: "==", suffix: "==", placeholder: L("evidenziato"))
+        case .code: wrapSelection(prefix: "`", suffix: "`", placeholder: L("codice"))
+        case .link: wrapSelection(prefix: "[", suffix: "](https://)", placeholder: L("collegamento"))
         case .list: toggleLinePrefix("- ")
         case .task: toggleLinePrefix("- [ ] ")
         case .quote: toggleLinePrefix("> ")
@@ -466,10 +466,10 @@ final class MarkdownTextView: NSTextView {
             return super.performKeyEquivalent(with: event)
         }
         switch key {
-        case "b": owner?.wrapSelection(prefix: "**", suffix: "**", placeholder: "grassetto")
-        case "i": owner?.wrapSelection(prefix: "*", suffix: "*", placeholder: "corsivo")
-        case "k": owner?.wrapSelection(prefix: "[", suffix: "](https://)", placeholder: "collegamento")
-        case "e": owner?.wrapSelection(prefix: "`", suffix: "`", placeholder: "codice")
+        case "b": owner?.wrapSelection(prefix: "**", suffix: "**", placeholder: L("grassetto"))
+        case "i": owner?.wrapSelection(prefix: "*", suffix: "*", placeholder: L("corsivo"))
+        case "k": owner?.wrapSelection(prefix: "[", suffix: "](https://)", placeholder: L("collegamento"))
+        case "e": owner?.wrapSelection(prefix: "`", suffix: "`", placeholder: L("codice"))
         default: return super.performKeyEquivalent(with: event)
         }
         return true

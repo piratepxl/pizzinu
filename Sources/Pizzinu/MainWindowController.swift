@@ -106,9 +106,9 @@ final class MainWindowModel: ObservableObject {
     /// Svuota il cestino dopo la conferma.
     func emptyTrash() {
         let count = count(for: .trash)
-        guard count > 0, Alerts.confirm(title: "Svuotare il cestino?",
-                                        message: "\(count) note verranno eliminate definitivamente. L'operazione non è reversibile.",
-                                        confirmTitle: "Svuota il cestino",
+        guard count > 0, Alerts.confirm(title: L("Svuotare il cestino?"),
+                                        message: L("%ld note verranno eliminate definitivamente. L'operazione non è reversibile.", count),
+                                        confirmTitle: L("Svuota il cestino"),
                                         destructive: true) else { return }
         manager.emptyTrash()
         selection = nil

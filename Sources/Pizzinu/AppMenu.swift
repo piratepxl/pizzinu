@@ -30,10 +30,10 @@ enum AppMenuBuilder {
         let item = NSMenuItem()
         let menu = NSMenu(title: "Pizzinu")
 
-        menu.addItem(withTitle: "Informazioni su Pizzinu",
+        menu.addItem(withTitle: L("Informazioni su Pizzinu"),
                      action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
                      keyEquivalent: "")
-        let updates = NSMenuItem(title: "Controlla aggiornamenti…",
+        let updates = NSMenuItem(title: L("Controlla aggiornamenti…"),
                                  action: #selector(AppDelegate.checkForUpdates(_:)),
                                  keyEquivalent: "")
         updates.target = target
@@ -41,7 +41,7 @@ enum AppMenuBuilder {
 
         menu.addItem(.separator())
 
-        let settings = NSMenuItem(title: "Impostazioni…",
+        let settings = NSMenuItem(title: L("Impostazioni…"),
                                   action: #selector(AppDelegate.openSettings(_:)),
                                   keyEquivalent: ",")
         settings.target = target
@@ -49,29 +49,29 @@ enum AppMenuBuilder {
 
         menu.addItem(.separator())
 
-        let servicesItem = NSMenuItem(title: "Servizi", action: nil, keyEquivalent: "")
-        let servicesMenu = NSMenu(title: "Servizi")
+        let servicesItem = NSMenuItem(title: L("Servizi"), action: nil, keyEquivalent: "")
+        let servicesMenu = NSMenu(title: L("Servizi"))
         servicesItem.submenu = servicesMenu
         NSApp.servicesMenu = servicesMenu
         menu.addItem(servicesItem)
 
         menu.addItem(.separator())
 
-        menu.addItem(withTitle: "Nascondi Pizzinu",
+        menu.addItem(withTitle: L("Nascondi Pizzinu"),
                      action: #selector(NSApplication.hide(_:)),
                      keyEquivalent: "h")
-        let hideOthers = NSMenuItem(title: "Nascondi gli altri",
+        let hideOthers = NSMenuItem(title: L("Nascondi gli altri"),
                                     action: #selector(NSApplication.hideOtherApplications(_:)),
                                     keyEquivalent: "h")
         hideOthers.keyEquivalentModifierMask = [.command, .option]
         menu.addItem(hideOthers)
-        menu.addItem(withTitle: "Mostra tutti",
+        menu.addItem(withTitle: L("Mostra tutti"),
                      action: #selector(NSApplication.unhideAllApplications(_:)),
                      keyEquivalent: "")
 
         menu.addItem(.separator())
 
-        menu.addItem(withTitle: "Esci da Pizzinu",
+        menu.addItem(withTitle: L("Esci da Pizzinu"),
                      action: #selector(NSApplication.terminate(_:)),
                      keyEquivalent: "q")
 
@@ -81,13 +81,13 @@ enum AppMenuBuilder {
 
     private static func fileMenuItem(target: AppDelegate) -> NSMenuItem {
         let item = NSMenuItem()
-        let menu = NSMenu(title: "File")
+        let menu = NSMenu(title: L("File"))
 
-        menu.addItem(action(title: "Nuova nota",
+        menu.addItem(action(title: L("Nuova nota"),
                             action: #selector(AppDelegate.newNote(_:)),
                             key: "n",
                             target: target))
-        let checklist = action(title: "Nuova checklist",
+        let checklist = action(title: L("Nuova checklist"),
                                action: #selector(AppDelegate.newChecklist(_:)),
                                key: "n",
                                target: target)
@@ -96,25 +96,25 @@ enum AppMenuBuilder {
 
         menu.addItem(.separator())
 
-        menu.addItem(action(title: "Elenco delle note",
+        menu.addItem(action(title: L("Elenco delle note"),
                             action: #selector(AppDelegate.showNoteList(_:)),
                             key: "l",
                             target: target))
-        menu.addItem(action(title: "Cerca…",
+        menu.addItem(action(title: L("Cerca…"),
                             action: #selector(AppDelegate.openSearch(_:)),
                             key: "f",
                             target: target))
 
         menu.addItem(.separator())
 
-        let importItem = action(title: "Importa da Markdown…",
+        let importItem = action(title: L("Importa da Markdown…"),
                                 action: #selector(AppDelegate.importNotes(_:)),
                                 key: "i",
                                 target: target)
         importItem.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(importItem)
 
-        let exportItem = action(title: "Esporta in Markdown…",
+        let exportItem = action(title: L("Esporta in Markdown…"),
                                 action: #selector(AppDelegate.exportNotes(_:)),
                                 key: "e",
                                 target: target)
@@ -123,7 +123,7 @@ enum AppMenuBuilder {
 
         menu.addItem(.separator())
 
-        menu.addItem(withTitle: "Chiudi finestra",
+        menu.addItem(withTitle: L("Chiudi finestra"),
                      action: #selector(NSWindow.performClose(_:)),
                      keyEquivalent: "w")
 
@@ -133,56 +133,57 @@ enum AppMenuBuilder {
 
     private static func editMenuItem() -> NSMenuItem {
         let item = NSMenuItem()
-        let menu = NSMenu(title: "Modifica")
-        menu.addItem(withTitle: "Annulla", action: Selector(("undo:")), keyEquivalent: "z")
-        let redo = NSMenuItem(title: "Ripristina", action: Selector(("redo:")), keyEquivalent: "z")
+        let menu = NSMenu(title: L("Modifica"))
+        // Chiavi proprie: «Annulla» e «Ripristina» altrove significano Cancel e Restore.
+        menu.addItem(withTitle: L("menu.annulla-modifica"), action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = NSMenuItem(title: L("menu.ripeti-modifica"), action: Selector(("redo:")), keyEquivalent: "z")
         redo.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(redo)
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Taglia", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        menu.addItem(withTitle: "Copia", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        menu.addItem(withTitle: "Incolla", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        menu.addItem(withTitle: "Seleziona tutto", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        menu.addItem(withTitle: L("Taglia"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        menu.addItem(withTitle: L("Copia"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        menu.addItem(withTitle: L("Incolla"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        menu.addItem(withTitle: L("Seleziona tutto"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         item.submenu = menu
         return item
     }
 
     private static func noteMenuItem(target: AppDelegate) -> NSMenuItem {
         let item = NSMenuItem()
-        let menu = NSMenu(title: "Nota")
+        let menu = NSMenu(title: L("Nota"))
 
-        menu.addItem(action(title: "Apri la nota",
+        menu.addItem(action(title: L("Apri la nota"),
                             action: #selector(AppDelegate.openFocusedNote(_:)),
                             key: "o",
                             target: target))
-        menu.addItem(action(title: "Duplica la nota",
+        menu.addItem(action(title: L("Duplica la nota"),
                             action: #selector(AppDelegate.duplicateFocusedNote(_:)),
                             key: "d",
                             target: target))
-        let archive = action(title: "Archivia la nota",
+        let archive = action(title: L("Archivia la nota"),
                              action: #selector(AppDelegate.archiveFocusedNote(_:)),
                              key: "a",
                              target: target)
         archive.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(archive)
-        menu.addItem(action(title: "Sposta la nota nel cestino",
+        menu.addItem(action(title: L("Sposta la nota nel cestino"),
                             action: #selector(AppDelegate.trashFocusedNote(_:)),
                             key: "\u{8}",
                             target: target))
 
         menu.addItem(.separator())
 
-        menu.addItem(action(title: "Mostra tutte le note",
+        menu.addItem(action(title: L("Mostra tutte le note"),
                             action: #selector(AppDelegate.showAllNotes(_:)),
                             key: "m",
                             target: target,
                             modifiers: [.command, .shift]))
-        menu.addItem(action(title: "Nascondi tutte le note",
+        menu.addItem(action(title: L("Nascondi tutte le note"),
                             action: #selector(AppDelegate.hideAllNotes(_:)),
                             key: "h",
                             target: target,
                             modifiers: [.command, .shift]))
-        menu.addItem(action(title: "Alterna la visibilità delle note",
+        menu.addItem(action(title: L("Alterna la visibilità delle note"),
                             action: #selector(AppDelegate.toggleAllNotes(_:)),
                             key: "h",
                             target: target,
@@ -194,22 +195,22 @@ enum AppMenuBuilder {
 
     private static func viewMenuItem(target: AppDelegate) -> NSMenuItem {
         let item = NSMenuItem()
-        let menu = NSMenu(title: "Vista")
+        let menu = NSMenu(title: L("Vista"))
 
-        menu.addItem(action(title: "Note attive",
+        menu.addItem(action(title: L("Note attive"),
                             action: #selector(AppDelegate.showActiveNotes(_:)),
                             key: "1",
                             target: target))
-        menu.addItem(action(title: "Note archiviate",
+        menu.addItem(action(title: L("Note archiviate"),
                             action: #selector(AppDelegate.showArchived(_:)),
                             key: "2",
                             target: target))
-        menu.addItem(action(title: "Cestino",
+        menu.addItem(action(title: L("Cestino"),
                             action: #selector(AppDelegate.showTrash(_:)),
                             key: "3",
                             target: target))
         menu.addItem(.separator())
-        menu.addItem(action(title: "Svuota il cestino…",
+        menu.addItem(action(title: L("Svuota il cestino…"),
                             action: #selector(AppDelegate.emptyTrash(_:)),
                             key: "",
                             target: target))
@@ -220,15 +221,15 @@ enum AppMenuBuilder {
 
     private static func windowMenuItem() -> NSMenuItem {
         let item = NSMenuItem()
-        let menu = NSMenu(title: "Finestra")
-        menu.addItem(withTitle: "Riduci a icona",
+        let menu = NSMenu(title: L("Finestra"))
+        menu.addItem(withTitle: L("Riduci a icona"),
                      action: #selector(NSWindow.performMiniaturize(_:)),
                      keyEquivalent: "m")
-        menu.addItem(withTitle: "Ingrandisci",
+        menu.addItem(withTitle: L("Ingrandisci"),
                      action: #selector(NSWindow.performZoom(_:)),
                      keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Porta tutte in primo piano",
+        menu.addItem(withTitle: L("Porta tutte in primo piano"),
                      action: #selector(NSApplication.arrangeInFront(_:)),
                      keyEquivalent: "")
         item.submenu = menu
@@ -238,8 +239,8 @@ enum AppMenuBuilder {
 
     private static func helpMenuItem(target: AppDelegate) -> NSMenuItem {
         let item = NSMenuItem()
-        let menu = NSMenu(title: "Aiuto")
-        let item1 = NSMenuItem(title: "Funzionalità disponibili in questa versione",
+        let menu = NSMenu(title: L("Aiuto"))
+        let item1 = NSMenuItem(title: L("Funzionalità disponibili in questa versione"),
                                action: #selector(AppDelegate.showVersionLimitations(_:)),
                                keyEquivalent: "?")
         item1.keyEquivalentModifierMask = [.command, .shift]
@@ -255,36 +256,36 @@ enum AppMenuBuilder {
     static func buildStatusMenu(target: AppDelegate) -> NSMenu {
         let menu = NSMenu(title: "Pizzinu")
 
-        menu.addItem(action(title: "Nuovo pizzino al volo", action: #selector(AppDelegate.newQuickNote(_:)), key: "n",
+        menu.addItem(action(title: L("Nuovo pizzino al volo"), action: #selector(AppDelegate.newQuickNote(_:)), key: "n",
                             target: target, modifiers: [.command, .option]))
-        menu.addItem(action(title: "Nuova nota", action: #selector(AppDelegate.newNote(_:)), key: "", target: target))
-        menu.addItem(action(title: "Nuova checklist", action: #selector(AppDelegate.newChecklist(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Nuova nota"), action: #selector(AppDelegate.newNote(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Nuova checklist"), action: #selector(AppDelegate.newChecklist(_:)), key: "", target: target))
 
         menu.addItem(.separator())
 
-        menu.addItem(action(title: "Elenco delle note…", action: #selector(AppDelegate.showNoteList(_:)), key: "", target: target))
-        menu.addItem(action(title: "Cerca…", action: #selector(AppDelegate.openSearch(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Elenco delle note…"), action: #selector(AppDelegate.showNoteList(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Cerca…"), action: #selector(AppDelegate.openSearch(_:)), key: "", target: target))
 
         menu.addItem(.separator())
 
-        menu.addItem(action(title: "Mostra tutte le note", action: #selector(AppDelegate.showAllNotes(_:)), key: "", target: target))
-        menu.addItem(action(title: "Nascondi tutte le note", action: #selector(AppDelegate.hideAllNotes(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Mostra tutte le note"), action: #selector(AppDelegate.showAllNotes(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Nascondi tutte le note"), action: #selector(AppDelegate.hideAllNotes(_:)), key: "", target: target))
 
         menu.addItem(.separator())
 
-        menu.addItem(action(title: "Note archiviate", action: #selector(AppDelegate.showArchived(_:)), key: "", target: target))
-        menu.addItem(action(title: "Cestino", action: #selector(AppDelegate.showTrash(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Note archiviate"), action: #selector(AppDelegate.showArchived(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Cestino"), action: #selector(AppDelegate.showTrash(_:)), key: "", target: target))
 
         menu.addItem(.separator())
 
-        menu.addItem(action(title: "Importa da Markdown…", action: #selector(AppDelegate.importNotes(_:)), key: "", target: target))
-        menu.addItem(action(title: "Esporta in Markdown…", action: #selector(AppDelegate.exportNotes(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Importa da Markdown…"), action: #selector(AppDelegate.importNotes(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Esporta in Markdown…"), action: #selector(AppDelegate.exportNotes(_:)), key: "", target: target))
 
         menu.addItem(.separator())
 
-        menu.addItem(action(title: "Controlla aggiornamenti…", action: #selector(AppDelegate.checkForUpdates(_:)), key: "", target: target))
-        menu.addItem(action(title: "Impostazioni…", action: #selector(AppDelegate.openSettings(_:)), key: "", target: target))
-        menu.addItem(action(title: "Esci da Pizzinu", action: #selector(NSApplication.terminate(_:)), key: "", target: nil))
+        menu.addItem(action(title: L("Controlla aggiornamenti…"), action: #selector(AppDelegate.checkForUpdates(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Impostazioni…"), action: #selector(AppDelegate.openSettings(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Esci da Pizzinu"), action: #selector(NSApplication.terminate(_:)), key: "", target: nil))
 
         return menu
     }

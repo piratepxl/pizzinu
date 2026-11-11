@@ -96,9 +96,9 @@ public struct ImportReport: Sendable, Equatable {
     public var total: Int { inserted + updated }
 
     public var summary: String {
-        var parts = ["\(inserted) note aggiunte", "\(updated) aggiornate"]
-        if skipped > 0 { parts.append("\(skipped) saltate") }
-        if failed > 0 { parts.append("\(failed) non importate") }
+        var parts = [L("%ld note aggiunte", inserted), L("%ld aggiornate", updated)]
+        if skipped > 0 { parts.append(L("%ld saltate", skipped)) }
+        if failed > 0 { parts.append(L("%ld non importate", failed)) }
         return parts.joined(separator: ", ")
     }
 }
@@ -216,17 +216,17 @@ public struct NoteImporter: NoteImporting, Sendable {
 
         for exported in notes {
             if !seenIDs.insert(exported.id).inserted {
-                warnings.append("La nota «\(exported.title)» compare più volte nel documento: le copie successive verranno ignorate.")
+                warnings.append(L("La nota «%@» compare più volte nel documento: le copie successive verranno ignorate.", exported.title))
                 continue
             }
             if exported.opacity < 0.55 || exported.opacity > 1 {
-                warnings.append("Nota «\(exported.title)»: opacità fuori intervallo, è stata corretta.")
+                warnings.append(L("Nota «%@»: opacità fuori intervallo, è stata corretta.", exported.title))
             }
             if exported.paperWidth <= 0 || exported.paperHeight <= 0 {
-                warnings.append("Nota «\(exported.title)»: dimensioni non valide, sono stati usati i valori predefiniti.")
+                warnings.append(L("Nota «%@»: dimensioni non valide, sono stati usati i valori predefiniti.", exported.title))
             }
             if exported.checklist.contains(where: { $0.text.isEmpty }) {
-                warnings.append("Nota «\(exported.title)»: la checklist contiene voci senza testo.")
+                warnings.append(L("Nota «%@»: la checklist contiene voci senza testo.", exported.title))
             }
             let key = Self.stableSourceKey(for: exported)
             let existing = try store.note(sourceKey: key) ?? store.note(id: exported.id)

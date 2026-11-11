@@ -125,9 +125,9 @@ enum LaunchAtLoginError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notRunningFromBundle:
-            "L'avvio automatico è disponibile solo quando Pizzinu viene eseguita dal proprio bundle applicazione."
+            L("L'avvio automatico è disponibile solo quando Pizzinu viene eseguita dal proprio bundle applicazione.")
         case .translocated:
-            "Pizzinu è stata aperta da una posizione temporanea: spostala nella cartella Applicazioni e riaprila."
+            L("Pizzinu è stata aperta da una posizione temporanea: spostala nella cartella Applicazioni e riaprila.")
         }
     }
 }

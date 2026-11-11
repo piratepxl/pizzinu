@@ -72,7 +72,7 @@ connessione è il controllo giornaliero degli aggiornamenti su GitHub, anonimo e
   Morbida, Increspata, Arricciata, Staccata, Nastrata, Graffettata, Rotonda, Strappata,
   Segnalibro (nastro largo e basso, con la punta), Quadrettata, Blocco Lungo, Spiralata, Biglietto Doppio e **Liquid Glass**
   (vetro di sistema `NSGlassEffectView` su macOS 26, senza riflessi aggiunti; il pannello mantiene sempre l'aspetto attivo, così il vetro resta trasparente anche quando la nota non ha il fuoco — soluzione sperimentale, vedi docs/LIMITS.md).
-- **Palette di 12 colori** con nome in italiano, più **colore personalizzato** per nota. I temi con
+- **Palette di 12 colori** con un nome per ciascuno, più **colore personalizzato** per nota. I temi con
   una carta di colore proprio (Strappata, Segnalibro, Quadrettata, Blocco Lungo, Spiralata, Biglietto
   Doppio, Liquid Glass) non mostrano la scelta del colore.
 - **Carattere della nota** scelto per singola nota, con i caratteri della cartella `Fonts`.
@@ -90,7 +90,7 @@ connessione è il controllo giornaliero degli aggiornamenti su GitHub, anonimo e
   [docs/MARKDOWN_FORMAT.md](docs/MARKDOWN_FORMAT.md)). Ogni pizzino si apre anche in Obsidian o
   in qualunque editor; si importano anche file Markdown scritti altrove.
 - **Menu bar** (`NSStatusItem`): il clic crea subito una nuova nota, il clic destro apre il menu.
-- **Avvio automatico all'accesso** opzionale (`SMAppService`). **Interfaccia in italiano.**
+- **Avvio automatico all'accesso** opzionale (`SMAppService`). **Interfaccia in italiano e in inglese**, scelta in automatico dalla lingua del Mac.
 
 ## Immagini
 

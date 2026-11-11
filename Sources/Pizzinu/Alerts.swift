@@ -7,19 +7,20 @@
 //
 
 import AppKit
+import PizzinuKit
 
 @MainActor
 enum Alerts {
     static func presentInfo(title: String, message: String) {
-        present(style: .informational, title: title, message: message, confirmTitle: "Va bene")
+        present(style: .informational, title: title, message: message, confirmTitle: L("Va bene"))
     }
 
     static func presentWarning(title: String, message: String) {
-        present(style: .warning, title: title, message: message, confirmTitle: "Va bene")
+        present(style: .warning, title: title, message: message, confirmTitle: L("Va bene"))
     }
 
     static func presentError(title: String, message: String) {
-        present(style: .critical, title: title, message: message, confirmTitle: "Chiudi")
+        present(style: .critical, title: title, message: message, confirmTitle: L("Chiudi"))
     }
 
     /// Chiede conferma per un'azione irreversibile.
@@ -32,7 +33,7 @@ enum Alerts {
         alert.informativeText = message
         alert.alertStyle = destructive ? .warning : .informational
         alert.addButton(withTitle: confirmTitle)
-        alert.addButton(withTitle: "Annulla")
+        alert.addButton(withTitle: L("Annulla"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -64,12 +65,12 @@ enum PasswordPrompt {
             alert.informativeText = notice.map { "\(message)\n\n⚠︎ \($0)" } ?? message
             alert.icon = NSImage(systemSymbolName: "lock.doc", accessibilityDescription: nil)
             alert.addButton(withTitle: confirmTitle)
-            alert.addButton(withTitle: "Annulla")
+            alert.addButton(withTitle: L("Annulla"))
 
             let first = NSSecureTextField(frame: NSRect(x: 0, y: needsConfirmation ? 30 : 0, width: 240, height: 24))
-            first.placeholderString = "Password"
+            first.placeholderString = L("Password")
             let second = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
-            second.placeholderString = "Ripeti la password"
+            second.placeholderString = L("Ripeti la password")
             let box = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: needsConfirmation ? 54 : 24))
             box.addSubview(first)
             if needsConfirmation { box.addSubview(second) }
@@ -84,11 +85,11 @@ enum PasswordPrompt {
             let password = first.stringValue
             if needsConfirmation {
                 if password.count < minimumLength {
-                    notice = "La password deve avere almeno \(minimumLength) caratteri."
+                    notice = L("La password deve avere almeno %ld caratteri.", minimumLength)
                     continue
                 }
                 if password != second.stringValue {
-                    notice = "Le due password non coincidono."
+                    notice = L("Le due password non coincidono.")
                     continue
                 }
             }

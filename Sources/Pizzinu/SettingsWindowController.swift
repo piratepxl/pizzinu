@@ -18,7 +18,7 @@ final class SettingsWindowController: NSWindowController {
                               styleMask: [.titled, .closable],
                               backing: .buffered,
                               defer: false)
-        window.title = "Impostazioni di Pizzinu"
+        window.title = L("Impostazioni di Pizzinu")
         window.isReleasedWhenClosed = false
         window.center()
 

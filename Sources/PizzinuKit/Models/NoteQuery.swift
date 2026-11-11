@@ -14,10 +14,10 @@ public enum NoteScope: String, CaseIterable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .active: "Attive"
-        case .archived: "Archiviate"
-        case .trash: "Cestino"
-        case .all: "Tutte"
+        case .active: L("Attive")
+        case .archived: L("Archiviate")
+        case .trash: L("Cestino")
+        case .all: L("Tutte")
         }
     }
 }
@@ -42,9 +42,9 @@ public struct NoteQuery: Sendable, Equatable {
 
         public var displayName: String {
             switch self {
-            case .modifiedDescending: "Modifica recente"
-            case .createdDescending: "Creazione recente"
-            case .titleAscending: "Titolo"
+            case .modifiedDescending: L("Modifica recente")
+            case .createdDescending: L("Creazione recente")
+            case .titleAscending: L("Titolo")
             }
         }
     }

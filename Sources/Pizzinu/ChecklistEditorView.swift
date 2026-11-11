@@ -396,7 +396,7 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
     }
 
     private static func placeholder(for depth: Int) -> String {
-        depth == 0 ? "Nuova attività" : "Sotto-attività"
+        depth == 0 ? L("Nuova attività") : L("Sotto-attività")
     }
 
     /// Applica il carattere corrente alle righe già costruite, senza rifarle:
@@ -460,7 +460,7 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
             checkbox.inkColor = currentTextColor
             checkbox.identifier = NSUserInterfaceItemIdentifier(entry.item.id.uuidString)
             checkbox.setAccessibilityRole(.checkBox)
-            checkbox.setAccessibilityLabel(entry.item.text.isEmpty ? "Voce vuota" : entry.item.text)
+            checkbox.setAccessibilityLabel(entry.item.text.isEmpty ? L("Voce vuota") : entry.item.text)
             let itemID = entry.item.id
             checkbox.onToggle = { [weak self, weak checkbox] in
                 guard let self, let checkbox else { return }

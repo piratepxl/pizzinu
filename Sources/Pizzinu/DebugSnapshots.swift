@@ -87,6 +87,28 @@ enum DebugSnapshots {
         renderArchive(to: directory.appendingPathComponent("archivio-selezione.png"), selecting: 1)
         renderShowcase(in: directory.appendingPathComponent("vetrina", isDirectory: true))
         renderUpdateWindow(to: directory)
+        renderPaperFinishes(in: directory.appendingPathComponent("carta", isDirectory: true))
+    }
+
+    /// Aspetto della carta sul tema «Morbida»: bordo scuro di prima e bordo
+    /// tenue di adesso, e la grana pronta per i temi delle occasioni.
+    static func renderPaperFinishes(in directory: URL) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let variants: [(String, PaperFinish)] = [
+            ("1-bordo-scuro-vecchio", .init(edge: .current, grain: .none)),
+            ("2-bordo-tenue-attuale", .init(edge: .tonal, grain: .none)),
+            ("3-grana-leggera", .init(edge: .tonal, grain: .fibers)),
+            ("4-grana-forte-occasioni", .init(edge: .tonal, grain: .strong)),
+        ]
+        for (name, finish) in variants {
+            PaperFinish.snapshotOverride = finish
+            for color in [NoteColorID.lemon, .pink, .skyBlue] {
+                var note = Note(content: "Chiamare Luca", colorID: color, paperShape: .soft)
+                note.paperSize = CGSize(width: 220, height: 200)
+                render(note: note, shape: .soft, to: directory.appendingPathComponent("\(name)-\(color.rawValue).png"), controls: false)
+            }
+        }
+        PaperFinish.snapshotOverride = nil
     }
 
     /// Finestra dell'aggiornamento: avviso, download in corso ed errore.

@@ -135,7 +135,7 @@ final class HoverControlsView: NSView {
         didSet {
             guard mode != oldValue else { return }
             lockButton.image = Theme.symbol(mode == .secretLocked ? "lock.open" : "lock.fill", size: Self.symbolSize, weight: .semibold)
-            lockButton.toolTip = mode == .secretLocked ? "Apri con la password" : "Chiudi a chiave"
+            lockButton.toolTip = mode == .secretLocked ? L("Apri con la password") : L("Chiudi a chiave")
             invalidateIntrinsicContentSize()
             needsLayout = true
         }
@@ -172,13 +172,13 @@ final class HoverControlsView: NSView {
         }
     }
 
-    private let pinButton = ChromeButton(symbol: "pin", accessibilityLabel: "Puntina")
-    private let reminderButton = ChromeButton(symbol: "alarm", accessibilityLabel: "Promemoria")
+    private let pinButton = ChromeButton(symbol: "pin", accessibilityLabel: L("Puntina"))
+    private let reminderButton = ChromeButton(symbol: "alarm", accessibilityLabel: L("Promemoria"))
     private let colorDot = ColorDotView()
-    private let markdownButton = ChromeButton(symbol: "number", accessibilityLabel: "Foglio Markdown")
-    private let lockButton = ChromeButton(symbol: "lock.fill", accessibilityLabel: "Chiudi a chiave")
-    private let menuButton = ChromeButton(symbol: "ellipsis", accessibilityLabel: "Altri comandi")
-    private let closeButton = ChromeButton(symbol: "xmark", accessibilityLabel: "Sposta nel cestino")
+    private let markdownButton = ChromeButton(symbol: "number", accessibilityLabel: L("Foglio Markdown"))
+    private let lockButton = ChromeButton(symbol: "lock.fill", accessibilityLabel: L("Chiudi a chiave"))
+    private let menuButton = ChromeButton(symbol: "ellipsis", accessibilityLabel: L("Altri comandi"))
+    private let closeButton = ChromeButton(symbol: "xmark", accessibilityLabel: L("Sposta nel cestino"))
 
     private var items: [NSView] {
         switch mode {
@@ -212,7 +212,7 @@ final class HoverControlsView: NSView {
         allItems.forEach(addSubview)
         lockButton.target = self
         lockButton.action = #selector(lockTapped)
-        lockButton.toolTip = "Chiudi a chiave"
+        lockButton.toolTip = L("Chiudi a chiave")
 
         pinButton.target = self
         pinButton.action = #selector(pinTapped)
@@ -225,7 +225,7 @@ final class HoverControlsView: NSView {
         closeButton.target = self
         closeButton.action = #selector(closeTapped)
         colorDot.addGestureRecognizer(NSClickGestureRecognizer(target: self, action: #selector(colorTapped)))
-        colorDot.toolTip = "Colore"
+        colorDot.toolTip = L("Colore")
         applyStates()
     }
 
@@ -252,15 +252,15 @@ final class HoverControlsView: NSView {
         pinButton.image = Theme.symbol(isPinned ? "pin.fill" : "pin", size: Self.symbolSize, weight: .semibold)
         pinButton.symbolColor = isPinned ? Self.pinRed : symbolColor
         pinButton.hoverBackground = isPinned ? Self.pinRed.withAlphaComponent(0.16) : NSColor.black.withAlphaComponent(0.08)
-        pinButton.toolTip = isPinned ? "Togli la puntina" : "Metti la puntina: resta sopra le altre finestre"
+        pinButton.toolTip = isPinned ? L("Togli la puntina") : L("Metti la puntina: resta sopra le altre finestre")
 
         reminderButton.image = Theme.symbol(hasReminder ? "alarm.fill" : "alarm", size: Self.symbolSize, weight: .semibold)
         reminderButton.symbolColor = hasReminder ? .systemOrange : symbolColor
-        reminderButton.toolTip = reminderDescription.map { "Promemoria: \($0)" } ?? "Dai un'ora a questo pizzino"
+        reminderButton.toolTip = reminderDescription.map { L("Promemoria: %@", $0) } ?? L("Dai un'ora a questo pizzino")
 
         markdownButton.symbolColor = isMarkdown ? .controlAccentColor : symbolColor
         markdownButton.hoverBackground = isMarkdown ? NSColor.controlAccentColor.withAlphaComponent(0.16) : NSColor.black.withAlphaComponent(0.08)
-        markdownButton.toolTip = isMarkdown ? "Torna a nota semplice" : "Trasforma in foglio Markdown"
+        markdownButton.toolTip = isMarkdown ? L("Torna a nota semplice") : L("Trasforma in foglio Markdown")
     }
 
     @objc private func pinTapped() { onPin?() }

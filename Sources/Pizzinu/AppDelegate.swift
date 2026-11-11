@@ -79,8 +79,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
             PizzinuLog.app.info("Pizzinu avviato")
         } catch {
             PizzinuLog.app.error("Avvio non riuscito: \(String(describing: error))")
-            Alerts.presentError(title: "Pizzinu non può essere avviato",
-                                message: "L'archivio delle note non è accessibile.\n\n\(error.localizedDescription)")
+            Alerts.presentError(title: L("Pizzinu non può essere avviato"),
+                                message: L("L'archivio delle note non è accessibile.") + "\n\n\(error.localizedDescription)")
         }
     }
 
@@ -291,9 +291,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
 
     @objc func trashFocusedNote(_ sender: Any?) {
         guard let id = focusedNoteID, let note = manager?.note(id: id) else { return }
-        guard Alerts.confirm(title: "Spostare la nota nel cestino?",
-                             message: "«\(note.displayTitle)» sarà recuperabile dal cestino.",
-                             confirmTitle: "Sposta nel cestino",
+        guard Alerts.confirm(title: L("Spostare la nota nel cestino?"),
+                             message: L("«%@» sarà recuperabile dal cestino.", note.displayTitle),
+                             confirmTitle: L("Sposta nel cestino"),
                              destructive: true) else { return }
         manager?.moveToTrash(id: id)
     }
@@ -302,15 +302,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
         guard let manager else { return }
         let count = manager.counts()[.trash] ?? 0
         guard count > 0 else {
-            Alerts.presentInfo(title: "Il cestino è già vuoto", message: "Non ci sono note da eliminare.")
+            Alerts.presentInfo(title: L("Il cestino è già vuoto"), message: L("Non ci sono note da eliminare."))
             return
         }
-        guard Alerts.confirm(title: "Svuotare il cestino?",
-                             message: "\(count) note verranno eliminate definitivamente. L'operazione non è reversibile.",
-                             confirmTitle: "Svuota il cestino",
+        guard Alerts.confirm(title: L("Svuotare il cestino?"),
+                             message: L("%ld note verranno eliminate definitivamente. L'operazione non è reversibile.", count),
+                             confirmTitle: L("Svuota il cestino"),
                              destructive: true) else { return }
         let removed = manager.emptyTrash()
-        Alerts.presentInfo(title: "Cestino svuotato", message: "\(removed) note eliminate.")
+        Alerts.presentInfo(title: L("Cestino svuotato"), message: L("%ld note eliminate.", removed))
     }
 
     @objc func showVersionLimitations(_ sender: Any?) {
@@ -368,7 +368,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
 
         Le note sono conservate solo su questo Mac.
         """
-        Alerts.presentInfo(title: "Funzionalità di Pizzinu", message: message)
+        Alerts.presentInfo(title: L("Funzionalità di Pizzinu"), message: L(message))
     }
 
     // MARK: - Finestra principale

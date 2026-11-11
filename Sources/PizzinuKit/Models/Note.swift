@@ -188,14 +188,14 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
 
     /// Titolo mostrato nelle liste: usa la prima riga di contenuto se il titolo è vuoto.
     public var displayTitle: String {
-        if isSecret { return "Pizzino segreto" }
+        if isSecret { return L("Pizzino segreto") }
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { return trimmed }
         if let firstLine = content.split(whereSeparator: \.isNewline).first {
             let text = String(firstLine).trimmingCharacters(in: .whitespaces)
             if !text.isEmpty { return text }
         }
-        return "Nota senza titolo"
+        return L("Nota senza titolo")
     }
 
     /// Anteprima del contenuto su una riga.

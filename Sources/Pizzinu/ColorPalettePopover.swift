@@ -132,7 +132,7 @@ final class ColorPaletteViewController: NSViewController {
             buttons.append(button)
         }
 
-        let custom = NSButton(title: "Colore personalizzato…", target: self, action: #selector(customTapped))
+        let custom = NSButton(title: L("Colore personalizzato…"), target: self, action: #selector(customTapped))
         custom.bezelStyle = .rounded
         custom.controlSize = .small
         custom.font = Theme.interfaceFont(size: 11)

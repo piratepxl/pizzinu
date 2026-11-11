@@ -79,12 +79,12 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Stepper("Larghezza iniziale: \(Int(manager.preferences.defaultPaperWidth)) punti",
+            Stepper(L("Larghezza iniziale: %ld punti", Int(manager.preferences.defaultPaperWidth)),
                     value: binding(\.defaultPaperWidth),
                     in: Double(Note.minimumPaperSize.width)...Double(Note.maximumPaperSize.width),
                     step: 10)
 
-            Stepper("Altezza iniziale: \(Int(manager.preferences.defaultPaperHeight)) punti",
+            Stepper(L("Altezza iniziale: %ld punti", Int(manager.preferences.defaultPaperHeight)),
                     value: binding(\.defaultPaperHeight),
                     in: Double(Note.minimumPaperSize.height)...Double(Note.maximumPaperSize.height),
                     step: 10)
@@ -96,7 +96,7 @@ struct SettingsView: View {
 
     private var quickSection: some View {
         Section("Al volo") {
-            Toggle("Scorciatoia globale \(GlobalHotKey.displayString)", isOn: binding(\.globalHotKeyEnabled))
+            Toggle(L("Scorciatoia globale %@", GlobalHotKey.displayString), isOn: binding(\.globalHotKeyEnabled))
             Text("Da qualsiasi app, senza cambiare finestra: premi, scrivi, Esc e torni al lavoro. Un pizzino lasciato vuoto sparisce da solo.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -115,7 +115,7 @@ struct SettingsView: View {
                                      manager.updatePreferences { $0.trashAutoPurgeDays = enabled ? 30 : nil }
                                  }))
             if manager.preferences.trashAutoPurgeDays != nil {
-                Stepper("Dopo \(manager.preferences.trashAutoPurgeDays ?? 30) giorni",
+                Stepper(L("Dopo %ld giorni", manager.preferences.trashAutoPurgeDays ?? 30),
                         value: purgeDaysBinding,
                         in: 1...3650,
                         step: 1)

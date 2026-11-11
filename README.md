@@ -34,7 +34,7 @@
 floating sheet of paper, drawn in vector with real volume and shadows. Notes save themselves,
 stay on your Mac, and are always one click away from the menu bar.
 
-> **Language:** the app interface is currently in **Italian**. An English interface is planned.
+> **Language:** the app speaks **English** and **Italian**, and follows the language of your Mac.
 
 ## Features
 

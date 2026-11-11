@@ -15,6 +15,7 @@
 //
 
 import AppKit
+import PizzinuKit
 import SwiftUI
 
 @MainActor
@@ -51,14 +52,14 @@ struct ReminderPickerView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
-            section("Tra poco") {
+            section(L("Tra poco")) {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
                     ForEach([5, 10, 15, 30, 60, 120], id: \.self) { minutes in
                         chip(Self.relativeLabel(minutes), date: Date().addingTimeInterval(TimeInterval(minutes * 60)))
                     }
                 }
             }
-            section("Più tardi") {
+            section(L("Più tardi")) {
                 VStack(spacing: 6) {
                     ForEach(laterChoices, id: \.title) { choice in
                         laterRow(choice)
@@ -110,18 +111,18 @@ struct ReminderPickerView: View {
             calendar.date(bySettingHour: hour, minute: 0, second: 0, of: day)
         }
         if let evening = at(now, 18), evening > now.addingTimeInterval(20 * 60) {
-            result.append(Later(title: "Stasera", icon: "sunset", date: evening))
+            result.append(Later(title: L("Stasera"), icon: "sunset", date: evening))
         } else if let night = at(now, 21), night > now.addingTimeInterval(20 * 60) {
-            result.append(Later(title: "Stasera", icon: "moon.stars", date: night))
+            result.append(Later(title: L("Stasera"), icon: "moon.stars", date: night))
         }
         if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) {
-            if let morning = at(tomorrow, 9) { result.append(Later(title: "Domani mattina", icon: "sunrise", date: morning)) }
-            if let afternoon = at(tomorrow, 15) { result.append(Later(title: "Domani pomeriggio", icon: "sun.max", date: afternoon)) }
+            if let morning = at(tomorrow, 9) { result.append(Later(title: L("Domani mattina"), icon: "sunrise", date: morning)) }
+            if let afternoon = at(tomorrow, 15) { result.append(Later(title: L("Domani pomeriggio"), icon: "sun.max", date: afternoon)) }
         }
         if let monday = calendar.nextDate(after: now, matching: DateComponents(hour: 9, minute: 0, weekday: 2),
                                           matchingPolicy: .nextTime),
            !calendar.isDateInTomorrow(monday) {
-            result.append(Later(title: "Lunedì mattina", icon: "briefcase", date: monday))
+            result.append(Later(title: L("Lunedì mattina"), icon: "briefcase", date: monday))
         }
         return result
     }
@@ -258,8 +259,12 @@ struct ReminderPickerView: View {
             if let date = calendar.date(from: components) { selection = date }
         } label: {
             VStack(spacing: 1) {
-                Text(offset == 0 ? "Oggi" : (offset == 1 ? "Domani" : day.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "it_IT")))))
+                Text(offset == 0 ? L("Oggi") : (offset == 1 ? L("Domani") : day.formatted(.dateTime.weekday(.abbreviated))))
                     .font(.system(size: 10.5, weight: .semibold))
+                    // «Tomorrow» e altre lingue: una riga sola, il testo si stringe un po'.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .padding(.horizontal, 2)
                 Text(day.formatted(.dateTime.day()))
                     .font(.system(size: 17, weight: .bold, design: .rounded))
             }
@@ -313,30 +318,30 @@ struct ReminderPickerView: View {
     // MARK: - Testi
 
     static func relativeLabel(_ minutes: Int) -> String {
-        minutes < 60 ? "\(minutes) min" : (minutes == 60 ? "1 ora" : "\(minutes / 60) ore")
+        minutes < 60 ? L("%ld min", minutes) : (minutes == 60 ? L("1 ora") : L("%ld ore", minutes / 60))
     }
 
     static func dayLabel(_ date: Date, calendar: Calendar) -> String {
-        if calendar.isDateInToday(date) { return "Oggi" }
-        if calendar.isDateInTomorrow(date) { return "Domani" }
-        return date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated).locale(Locale(identifier: "it_IT"))).capitalized
+        if calendar.isDateInToday(date) { return L("Oggi") }
+        if calendar.isDateInTomorrow(date) { return L("Domani") }
+        return date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)).capitalized
     }
 
     static func shortDay(_ date: Date, calendar: Calendar) -> String {
-        if calendar.isDateInToday(date) { return "oggi" }
-        if calendar.isDateInTomorrow(date) { return "domani" }
-        return date.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "it_IT")))
+        if calendar.isDateInToday(date) { return L("oggi") }
+        if calendar.isDateInTomorrow(date) { return L("domani") }
+        return date.formatted(.dateTime.weekday(.abbreviated))
     }
 
     static func distanceLabel(to date: Date) -> String {
         let minutes = Int((date.timeIntervalSinceNow / 60).rounded())
-        if minutes <= 0 { return "adesso" }
-        if minutes < 60 { return "tra \(minutes) minuti" }
+        if minutes <= 0 { return L("adesso") }
+        if minutes < 60 { return L("tra %ld minuti", minutes) }
         let hours = minutes / 60
         let rest = minutes % 60
-        if hours < 24 { return rest == 0 ? "tra \(hours) \(hours == 1 ? "ora" : "ore")" : "tra \(hours) h \(rest) min" }
+        if hours < 24 { return rest == 0 ? (hours == 1 ? L("tra 1 ora") : L("tra %ld ore", hours)) : L("tra %ld h %ld min", hours, rest) }
         let days = Int((Double(minutes) / 1440).rounded())
-        return "tra \(days) \(days == 1 ? "giorno" : "giorni")"
+        return days == 1 ? L("tra 1 giorno") : L("tra %ld giorni", days)
     }
 
     /// Fra mezz'ora, arrotondata ai 5 minuti.

@@ -135,8 +135,8 @@ public enum NoteTransferError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .emptyDocument: "Non è stato trovato nessun file Markdown da importare."
-        case .fileNotReadable(let path): "Impossibile leggere il file: \(path)"
+        case .emptyDocument: L("Non è stato trovato nessun file Markdown da importare.")
+        case .fileNotReadable(let path): L("Impossibile leggere il file: %@", path)
         }
     }
 }

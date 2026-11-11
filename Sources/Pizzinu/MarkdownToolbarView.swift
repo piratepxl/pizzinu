@@ -15,6 +15,7 @@
 //
 
 import AppKit
+import PizzinuKit
 
 final class MarkdownToolbarView: NSView {
     enum Command: CaseIterable {
@@ -102,8 +103,8 @@ final class MarkdownToolbarView: NSView {
             button.isBordered = false
             button.contentTintColor = .white
             button.refusesFirstResponder = true
-            button.toolTip = command.title
-            button.setAccessibilityLabel(command.title)
+            button.toolTip = L(command.title)
+            button.setAccessibilityLabel(L(command.title))
             button.target = self
             button.action = #selector(pressed(_:))
             strip.addSubview(button)

@@ -67,7 +67,8 @@ esiste soltanto nel piano.
       promemoria, rilascio di testo sulla scrivania, resa Markdown, nuove caselle, comandi in
       basso dopo un menu) — vedi [TEST_REPORT.md](TEST_REPORT.md) § 3.
 - [ ] Misure di RAM/CPU con decine di note aperte.
-- [ ] Localizzazione: interfaccia **solo in italiano**.
+- [x] Localizzazione: interfaccia in **italiano e inglese** (`Resources/*.lproj`, controllo con
+      `Scripts/check_localization.py`).
 
 ## 5. Scelte consapevoli
 
