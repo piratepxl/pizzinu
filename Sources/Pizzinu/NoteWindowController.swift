@@ -390,8 +390,21 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         content.updateProgress(done: note.checklistDoneCount, total: note.checklistTotalCount)
     }
 
+    /// La × sposta la nota nel cestino (si recupera dall'archivio, ⌘3).
+    /// Una nota di testo rimasta vuota non lascia traccia.
     func requestClose() {
-        hidePanel()
+        content.commitPendingEdits()
+        let id = noteID
+        let current = manager.note(id: id) ?? note
+        let isBlank = !current.isSecret && current.kind == .text
+            && current.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        fadeOut { [weak manager] in
+            if isBlank {
+                manager?.deletePermanently(id: id)
+            } else {
+                manager?.moveToTrash(id: id)
+            }
+        }
     }
 
     // MARK: - Comandi
@@ -506,9 +519,8 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         add(to: menu, "Duplica", #selector(duplicateNote(_:)))
         add(to: menu, "Esporta in Markdown…", #selector(exportNote(_:)))
         add(to: menu, "Archivia", #selector(archiveNote(_:)))
-        add(to: menu, "Elimina (cestino)", #selector(trashNote(_:)))
         menu.addItem(.separator())
-        add(to: menu, "Nascondi nota", #selector(closeNote(_:)), key: "w")
+        add(to: menu, "Sposta nel cestino", #selector(trashNote(_:)))
 
         return menu
     }
@@ -852,6 +864,5 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
 
     @objc private func duplicateNote(_ sender: Any?) { manager.duplicate(id: noteID) }
     @objc private func archiveNote(_ sender: Any?) { manager.archive(id: noteID) }
-    @objc private func trashNote(_ sender: Any?) { manager.moveToTrash(id: noteID) }
-    @objc private func closeNote(_ sender: Any?) { hidePanel() }
+    @objc private func trashNote(_ sender: Any?) { requestClose() }
 }

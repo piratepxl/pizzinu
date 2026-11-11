@@ -55,6 +55,26 @@ enum DebugSnapshots {
         render(note: markdown, shape: .soft, to: directory.appendingPathComponent("markdown-scrittura.png"), editing: true)
         markdown.paperSize = CGSize(width: 190, height: 200)
         render(note: markdown, shape: .soft, to: directory.appendingPathComponent("markdown-scrittura-stretta.png"), editing: true)
+        // Checklist con voci lunghe (vanno a capo) e con tante voci (scorre).
+        var list = Note(kind: .checklist, colorID: .skyBlue, paperShape: .soft)
+        list.paperSize = CGSize(width: 220, height: 200)
+        let long = [
+            ChecklistItem(noteID: list.id, text: "Telefonare all'idraulico per il rubinetto della cucina che perde da giorni", sortIndex: 0),
+            ChecklistItem(noteID: list.id, text: "Pane", isDone: true, sortIndex: 1),
+            ChecklistItem(noteID: list.id, text: "Ritirare il pacco in posta prima delle sei", sortIndex: 2),
+        ]
+        render(note: list, shape: .soft, to: directory.appendingPathComponent("checklist-lunga.png"), checklist: long)
+        let many = (0..<14).map { ChecklistItem(noteID: list.id, text: "Voce numero \($0 + 1) della lista", sortIndex: $0) }
+        list.paperSize = CGSize(width: 190, height: 180)
+        render(note: list, shape: .soft, to: directory.appendingPathComponent("checklist-molte.png"), checklist: many)
+        render(note: list, shape: .taped, to: directory.appendingPathComponent("checklist-lunga-nastro.png"), checklist: long)
+        // Tante voci su una nota larga: si dispongono in colonne.
+        list.paperSize = CGSize(width: 320, height: 230)
+        render(note: list, shape: .soft, to: directory.appendingPathComponent("checklist-colonne.png"), checklist: many)
+        let shopping = ["Latte", "Pane", "Uova", "Caffè", "Basilico", "Pomodori", "Mozzarella", "Olio", "Sale", "Farina", "Burro", "Mele"]
+            .enumerated().map { ChecklistItem(noteID: list.id, text: $0.element, isDone: $0.offset < 3, sortIndex: $0.offset) }
+        list.paperSize = CGSize(width: 260, height: 230)
+        render(note: list, shape: .tornRuled, to: directory.appendingPathComponent("checklist-spesa.png"), checklist: shopping)
         var secret = Note(content: "Codice della cassaforte: 4471\nNon dirlo a nessuno.", colorID: .lemon, isSecret: true)
         secret.paperSize = CGSize(width: 280, height: 230)
         render(note: secret, shape: .secretSheet, to: directory.appendingPathComponent("segreto-aperto.png"))
@@ -135,6 +155,125 @@ enum DebugSnapshots {
         tools.isPinned = true
         tools.reminderAt = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: Date())
         render(note: tools, shape: .taped, to: directory.appendingPathComponent("comandi.png"))
+    }
+
+    /// Collaudo dei cambi di tipo durante la scrittura, su un archivio
+    /// temporaneo: Markdown acceso e spento, checklist, scrittura in mezzo.
+    ///     PIZZINU_STRESS=1 build/Pizzinu.app/Contents/MacOS/Pizzinu
+    static func stressKinds() {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("pizzinu-stress-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        guard let store = try? NoteStore(databaseURL: folder.appendingPathComponent("prova.sqlite")),
+              let manager = try? NoteManager(store: store, maintenance: false) else { print("archivio non creato"); return }
+        func spin(_ seconds: Double = 0.12) { RunLoop.main.run(until: Date().addingTimeInterval(seconds)) }
+        func step(_ label: String) { print("•", label); fflush(stdout) }
+        // La × deve mandare nel cestino (11 nov: restava solo nascosta).
+        do {
+            let closing = manager.createNote(kind: .text, text: "da cestinare")
+            manager.openWindow(for: closing.id); spin()
+            manager.windowController(for: closing.id)?.beginEditing(); spin()
+            if let editor = manager.windowController(for: closing.id)?.panel.firstResponder as? NSTextView {
+                editor.insertText(" ancora", replacementRange: editor.selectedRange())
+            }
+            spin(0.1)
+            manager.windowController(for: closing.id)?.requestClose()
+            spin(1.5)
+            let stored = try? store.note(id: closing.id)
+            print("× → stato:", stored.map { "\($0.lifecycle) visibile=\($0.isVisible)" } ?? "eliminata")
+        }
+        do {
+            let blank = manager.createNote(kind: .text)
+            manager.openWindow(for: blank.id); spin()
+            manager.windowController(for: blank.id)?.requestClose()
+            spin(1.5)
+            let stored = try? store.note(id: blank.id)
+            print("× su nota vuota → stato:", stored.map { "\($0.lifecycle) visibile=\($0.isVisible)" } ?? "eliminata")
+        }
+        let note = manager.createNote(kind: .text)
+        manager.openWindow(for: note.id)
+        spin()
+        guard let controller = manager.windowController(for: note.id) else { print("finestra assente"); return }
+        func type(_ text: String) {
+            for character in text {
+                if let responder = controller.panel.firstResponder as? NSTextView {
+                    if character == "\n" { responder.doCommand(by: #selector(NSResponder.insertNewline(_:))) }
+                    else { responder.insertText(String(character), replacementRange: responder.selectedRange()) }
+                }
+                spin(0.01)
+            }
+        }
+        for round in 1...3 {
+            step("giro \(round): Markdown acceso")
+            controller.toggleMarkdown(); spin()
+            controller.beginEditing(); spin()
+            step("scrivo nel foglio Markdown")
+            type("# Spesa\n- [ ] latte\n- [x] pane\n")
+            step("Markdown spento mentre scrivo")
+            controller.toggleMarkdown(); spin()
+            controller.beginEditing(); spin()
+            type(" altro")
+            step("Markdown acceso di nuovo")
+            controller.toggleMarkdown(); spin()
+            controller.beginEditing(); spin()
+            step("solo attività, poi Markdown spento (torna checklist)")
+            controller.panel.firstResponder.flatMap { $0 as? NSTextView }?.selectAll(nil)
+            type("- [ ] uno\n- [ ] due che è una voce molto lunga da andare a capo\n- [x] tre")
+            controller.toggleMarkdown(); spin()
+            step("scrivo nella checklist")
+            controller.beginEditing(); spin()
+            type("aggiunta lunga per vedere il ritorno a capo dentro il foglio\nnuova\nancora\naltra\naltra ancora\n")
+            step("checklist → Markdown mentre scrivo")
+            controller.toggleMarkdown(); spin()
+            controller.beginEditing(); spin()
+            type("\nfine")
+            controller.toggleMarkdown(); spin()
+            controller.finishEditing(); spin()
+        }
+        func resizeDance(_ label: String) {
+            step("ridimensiono: \(label)")
+            for (dx, dy) in [(-60, 40), (-90, 80), (120, -60), (200, -120), (-150, 150), (40, -20), (0, 0)] {
+                for k in 1...6 {
+                    controller.resizeBy(delta: CGSize(width: CGFloat(dx * k) / 6, height: CGFloat(dy * k) / 6))
+                    spin(0.015)
+                }
+                controller.endResize()
+                spin(0.03)
+            }
+        }
+        step("checklist con tante voci")
+        controller.toggleMarkdown(); spin()
+        controller.beginEditing(); spin()
+        controller.panel.firstResponder.flatMap { $0 as? NSTextView }?.selectAll(nil)
+        type((1...18).map { "- [ ] voce \($0) della lista della spesa" }.joined(separator: "\n"))
+        resizeDance("foglio Markdown in scrittura")
+        // Crash dell'11 nov: in lettura, caselle fuori vista → rettangolo del
+        // puntatore nullo → eccezione di AppKit.
+        step("foglio Markdown in lettura con caselle fuori vista")
+        controller.finishEditing(); spin()
+        for (dx, dy) in [(-120, 120), (0, 0), (-160, 160)] {
+            controller.resizeBy(delta: CGSize(width: CGFloat(dx), height: CGFloat(dy))); controller.endResize(); spin(0.05)
+            controller.panel.resetCursorRects(); spin(0.05)
+        }
+        controller.beginEditing(); spin()
+        controller.toggleMarkdown(); spin()
+        resizeDance("checklist")
+        controller.beginEditing(); spin()
+        type("ancora una voce lunghissima che deve andare a capo più volte dentro la colonna\naltra\n")
+        resizeDance("checklist in scrittura")
+        for shape in PaperShape.allCases {
+            let item = NSMenuItem(); item.representedObject = shape.rawValue
+            controller.perform(Selector(("chooseTheme:")), with: item); spin(0.05)
+            controller.resizeBy(delta: CGSize(width: -80, height: 60)); spin(0.03); controller.endResize()
+            controller.resizeBy(delta: CGSize(width: 100, height: -80)); spin(0.03); controller.endResize()
+        }
+        controller.toggleMarkdown(); spin()
+        for shape in PaperShape.allCases {
+            let item = NSMenuItem(); item.representedObject = shape.rawValue
+            controller.perform(Selector(("chooseTheme:")), with: item); spin(0.05)
+            controller.resizeBy(delta: CGSize(width: -80, height: 60)); spin(0.03); controller.endResize()
+        }
+        print("collaudo finito senza crash")
+        try? FileManager.default.removeItem(at: folder)
     }
 
     /// Fotogrammi della piegatura 3D del pizzino segreto, disegnati da
@@ -389,7 +528,8 @@ enum DebugSnapshots {
         try? FileManager.default.removeItem(at: folder)
     }
 
-    private static func render(note: Note, shape: PaperShape, to url: URL, editing: Bool = false, controls: Bool = true) {
+    private static func render(note: Note, shape: PaperShape, to url: URL, editing: Bool = false, controls: Bool = true,
+                               checklist: [ChecklistItem] = []) {
         let metrics = StickyMetrics.make(paperSize: note.paperSize, mode: .realistic)
         let size = metrics.windowSize(forPaperSize: note.paperSize)
         let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: size),
@@ -401,7 +541,7 @@ enum DebugSnapshots {
         window.contentView = host
         host.tilt = ProcessInfo.processInfo.environment["PIZZINU_SNAPSHOT_TILT"].flatMap(Double.init).map { CGFloat($0) } ?? CGFloat(note.tiltDegrees)
         content.apply(note: note, metrics: metrics, palette: note.palette(globalMode: .realistic),
-                      shape: shape, showsShadow: true, checklistItems: [])
+                      shape: shape, showsShadow: true, checklistItems: checklist)
         content.setControlsEngaged(controls)
         host.layoutSubtreeIfNeeded()
         if editing {
@@ -416,7 +556,7 @@ enum DebugSnapshots {
             let newMetrics = StickyMetrics.make(paperSize: bigger.paperSize, mode: .realistic)
             window.setContentSize(newMetrics.windowSize(forPaperSize: bigger.paperSize))
             content.apply(note: bigger, metrics: newMetrics, palette: bigger.palette(globalMode: .realistic),
-                          shape: shape, showsShadow: true, checklistItems: [])
+                          shape: shape, showsShadow: true, checklistItems: checklist)
             host.layoutSubtreeIfNeeded()
             content.layoutSubtreeIfNeeded()
         }

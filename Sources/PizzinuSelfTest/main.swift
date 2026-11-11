@@ -120,6 +120,21 @@ do {
                "la nota nel cestino compare fra le eliminate")
     try store.restoreFromTrash(id: notaElenco.id)
     checkEqual(try store.trashCount(), 0, "ripristino dal cestino")
+    check(try store.note(id: notaElenco.id)?.isVisible == true, "una nota ripristinata torna visibile")
+
+    // Passaggio alla × che cestina: le note nascoste vanno nel cestino, una volta.
+    var nascosta = Note(content: "chiusa con la ×")
+    nascosta.isVisible = false
+    try store.upsert(nascosta)
+    var nascostaArchiviata = Note(content: "archiviata e nascosta", isArchived: true)
+    nascostaArchiviata.isVisible = false
+    try store.upsert(nascostaArchiviata)
+    checkEqual(try store.trashHiddenActiveNotes(), 1, "solo la nota attiva nascosta va nel cestino")
+    check(try store.note(id: nascosta.id)?.lifecycle == .trashed, "la nota nascosta è nel cestino")
+    check(try store.note(id: nascostaArchiviata.id)?.lifecycle == .archived, "l'archivio non si tocca")
+    checkEqual(try store.trashHiddenActiveNotes(), 0, "una seconda volta non sposta niente")
+    try store.deletePermanently(id: nascosta.id)
+    try store.deletePermanently(id: nascostaArchiviata.id)
 
     // Conteggi per ambito.
     let conteggi = try store.counts()
@@ -802,6 +817,22 @@ do {
     checkEqual(MarkdownText.toggleTask(in: "a\n- [ ] b", line: 1), "a\n- [x] b", "la spunta si inverte sulla riga giusta")
     checkEqual(MarkdownText.toggleTask(in: "a\n- [x] b", line: 1), "a\n- [ ] b", "e si toglie")
     checkEqual(MarkdownText.toggleTask(in: "a", line: 0), "a", "una riga normale resta invariata")
+    check(MarkdownText.isTaskList("- [ ] a\n  - [x] b\n\n- [ ] "), "un elenco di sole attività torna checklist")
+    check(!MarkdownText.isTaskList("# Titolo\n- [ ] a"), "con un titolo resta testo")
+    check(!MarkdownText.isTaskList("- a"), "un punto elenco semplice non è una checklist")
+    check(!MarkdownText.isTaskList("\n  \n"), "un foglio vuoto non è una checklist")
+    do {
+        let noteID = UUID()
+        let original = [ChecklistItem(noteID: noteID, text: "uno", isDone: true, sortIndex: 0)]
+        var withChild = original
+        withChild.append(ChecklistItem(noteID: noteID, parentID: original[0].id, text: "sotto", sortIndex: 0))
+        let markdown = MarkdownNoteCodec.taskList(from: withChild, noteID: noteID)
+        check(MarkdownText.isTaskList(markdown), "una checklist passata al Markdown è riconosciuta")
+        let back = MarkdownNoteCodec.checklistItems(fromTaskList: markdown, noteID: noteID)
+        checkEqual(back.map(\.text), ["uno", "sotto"], "tornando indietro le voci restano")
+        checkEqual(back.map(\.isDone), [true, false], "e anche le spunte")
+        checkEqual(back[1].parentID, back[0].id, "e i livelli")
+    }
     checkEqual(MarkdownText.continuation(for: "- latte"), "- ", "andando a capo l'elenco puntato continua")
     checkEqual(MarkdownText.continuation(for: "  * uova"), "  * ", "e conserva rientro e segno")
     checkEqual(MarkdownText.continuation(for: "9. nove"), "10. ", "l'elenco numerato passa al numero successivo")

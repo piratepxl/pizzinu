@@ -178,7 +178,7 @@ final class HoverControlsView: NSView {
     private let markdownButton = ChromeButton(symbol: "number", accessibilityLabel: "Foglio Markdown")
     private let lockButton = ChromeButton(symbol: "lock.fill", accessibilityLabel: "Chiudi a chiave")
     private let menuButton = ChromeButton(symbol: "ellipsis", accessibilityLabel: "Altri comandi")
-    private let closeButton = ChromeButton(symbol: "xmark", accessibilityLabel: "Chiudi la nota")
+    private let closeButton = ChromeButton(symbol: "xmark", accessibilityLabel: "Sposta nel cestino")
 
     private var items: [NSView] {
         switch mode {

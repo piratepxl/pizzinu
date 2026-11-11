@@ -269,6 +269,11 @@ final class NoteContentView: NSView {
             markdownEditor = markdown
         }
 
+        // Checklist e foglio Markdown scorrono: da macOS 14 le viste non
+        // ritagliano più ai propri bordi e, con la nota inclinata, la clip view
+        // interna risulta più grande della scrollview; senza ritaglio le righe
+        // scivolavano sotto i comandi. Si imposta una volta, non a ogni layout.
+        if kind == .checklist || kind == .markdown { bodyHost?.clipsToBounds = true }
         // Il corpo va sotto puntina, etichette e comandi.
         if let bodyHost { addSubview(bodyHost, positioned: .above, relativeTo: glassView ?? surface) }
         styleBody(note: note)
@@ -280,7 +285,8 @@ final class NoteContentView: NSView {
         textEditor?.apply(font: Theme.noteFont(named: noteFontName, size: fontSize),
                           textColor: ink,
                           insertionColor: ink,
-                          placeholder: isSecret ? "Scrivi il tuo segreto…" : "Cosa non vuoi dimenticare?")
+                          placeholder: isSecret ? "Scrivi il tuo segreto…" : "Cosa non vuoi dimenticare?",
+                          hint: "Doppio clic per scrivere")
         checklistEditor?.apply(fontSize: fontSize, textColor: palette.text, fontName: noteFontName)
         markdownEditor?.apply(source: note.content,
                               fontName: noteFontName,
@@ -486,10 +492,18 @@ final class NoteContentView: NSView {
             bar.frame = NSRect(x: paperRect.midX - width / 2, y: barY, width: width, height: MarkdownToolbarView.height)
             bodyRect.size.height = max(20, barY - 6 - bodyRect.minY)
         }
-        // Il foglio Markdown lascia libera la fascia dei comandi in basso.
-        if markdownEditor != nil {
+        let controlSize = controls.intrinsicContentSize
+        let controlOrigin = StickyGeometry.controlsOrigin(in: paperRect, shape: shape, metrics: metrics,
+                                                          size: controlSize, inset: Self.controlsInset)
+        // Il foglio Markdown e la checklist lasciano libera la fascia dei
+        // comandi in basso: le voci non finiscono dietro i pulsanti. Il limite
+        // è la posizione vera dei comandi (sulle note piccole il margine del
+        // testo non basta).
+        if markdownEditor != nil || checklistEditor != nil {
             let reserved = HoverControlsView.itemSize + Self.controlsInset - metrics.textInsets.bottom + 2
-            if reserved > 0 { bodyRect.origin.y += reserved; bodyRect.size.height -= reserved }
+            let floor = max(bodyRect.minY + max(0, reserved), controlOrigin.y + controlSize.height + 2)
+            let shift = floor - bodyRect.minY
+            if shift > 0 { bodyRect.origin.y += shift; bodyRect.size.height = max(20, bodyRect.height - shift) }
         }
         bodyHost?.frame = bodyRect
 
@@ -502,9 +516,6 @@ final class NoteContentView: NSView {
             pinView.frame = NSRect(x: tip.x - width * 0.06, y: tip.y - height * 0.03, width: width, height: height)
         }
 
-        let controlSize = controls.intrinsicContentSize
-        let controlOrigin = StickyGeometry.controlsOrigin(in: paperRect, shape: shape, metrics: metrics,
-                                                          size: controlSize, inset: Self.controlsInset)
         controls.frame = NSRect(origin: controlOrigin, size: controlSize)
         controls.isHidden = !controlsVisible
 

@@ -46,6 +46,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
             let ok = DebugSnapshots.checkSecretCycle()
             exit(ok ? 0 : 1)
         }
+        if ProcessInfo.processInfo.environment["PIZZINU_STRESS"] != nil {
+            DebugSnapshots.stressKinds()
+            exit(0)
+        }
         if let directory = DebugSnapshots.directory {
             DebugSnapshots.run(in: directory)
             NSApp.terminate(nil)
@@ -67,6 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
                     MainActor.assumeIsolated { self?.applyIntegrations(preferences) }
                 }
             configureUpdater(manager)
+            LaunchAtLogin.repairIfNeeded()
             if !manager.preferences.hasCompletedFirstRun {
                 manager.updatePreferences { $0.hasCompletedFirstRun = true }
                 presentMainWindow()

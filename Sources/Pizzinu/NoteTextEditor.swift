@@ -60,6 +60,14 @@ final class NoteTextEditor: NSTextView {
     /// Testo suggerito mostrato quando la nota è vuota. `NSTextView` non offre
     /// un segnaposto nativo, quindi lo disegniamo noi direttamente.
     private var placeholder: String?
+    /// Suggerimento sotto il segnaposto («Doppio clic per scrivere»), solo
+    /// finché la scrittura è chiusa: chi apre l'app la prima volta non sa che
+    /// il clic singolo trascina.
+    private var hint: String?
+
+    override var isEditable: Bool {
+        didSet { if isEditable != oldValue { needsDisplay = true } }
+    }
 
     private var isApplyingProgrammatically = false
 
@@ -169,7 +177,10 @@ final class NoteTextEditor: NSTextView {
     /// sia il tema (anche quelli tondi o con i bordi rientrati).
     private func drawPlaceholder(_ placeholder: String) {
         let area = contentBounds
-        let box = NSSize(width: max(20, area.width * 0.86), height: max(12, area.height * 0.62))
+        var box = NSSize(width: max(20, area.width * 0.86), height: max(12, area.height * 0.62))
+        let hintText = isEditable ? nil : hintAttributedText(width: box.width, area: area)
+        let hintGap: CGFloat = hintText == nil ? 0 : max(3, area.height * 0.025)
+        if let hintText { box.height = max(12, box.height - hintText.size.height - hintGap) }
         var pointSize = min(max(appliedPointSize, Self.minPointSize), max(Self.minPointSize, area.height * 0.30))
         var attributed = attributedText(placeholder, pointSize: pointSize, color: placeholderColor)
         var size = NSSize.zero
@@ -181,9 +192,41 @@ final class NoteTextEditor: NSTextView {
             if fits || pointSize <= Self.minPointSize { break }
             pointSize = max(Self.minPointSize, pointSize - 0.5)
         }
-        let rect = NSRect(x: area.midX - box.width / 2, y: area.midY - size.height / 2,
+        // Segnaposto e suggerimento formano un blocco centrato sulla carta.
+        let block = size.height + hintGap + (hintText?.size.height ?? 0)
+        let top = area.midY - block / 2
+        let rect = NSRect(x: area.midX - box.width / 2, y: top,
                           width: box.width, height: ceil(size.height) + 1)
         attributed.draw(with: rect, options: [.usesLineFragmentOrigin, .usesFontLeading])
+        if let hintText {
+            let hintRect = NSRect(x: area.midX - box.width / 2, y: top + size.height + hintGap,
+                                  width: box.width, height: ceil(hintText.size.height) + 1)
+            hintText.text.draw(with: hintRect, options: [.usesLineFragmentOrigin, .usesFontLeading])
+        }
+    }
+
+    /// Il suggerimento è più piccolo e in un altro carattere (quello di
+    /// sistema, in corsivo), più tenue del segnaposto: si legge ma non compete.
+    private func hintAttributedText(width: CGFloat, area: NSRect) -> (text: NSAttributedString, size: NSSize)? {
+        guard let hint, !hint.isEmpty, area.height > 50 else { return nil }
+        let pointSize = min(max(Self.minPointSize, appliedPointSize * 0.5), 13)
+        let base = NSFont.systemFont(ofSize: pointSize, weight: .medium)
+        let font = NSFontManager.shared.convert(base, toHaveTrait: .italicFontMask)
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        paragraph.lineBreakMode = .byWordWrapping
+        let text = NSAttributedString(string: hint, attributes: [
+            .font: font,
+            .foregroundColor: insertionColor.withAlphaComponent(0.42),
+            .paragraphStyle: paragraph,
+            .kern: 0.2,
+        ])
+        let size = text.boundingRect(with: NSSize(width: width, height: .greatestFiniteMagnitude),
+                                     options: [.usesLineFragmentOrigin, .usesFontLeading]).size
+        // Su una nota molto piccola il suggerimento lascerebbe troppo poco
+        // spazio al segnaposto: meglio non mostrarlo.
+        guard size.height <= area.height * 0.22 else { return nil }
+        return (text, NSSize(width: ceil(size.width), height: ceil(size.height)))
     }
 
     /// Larghezza della parola più lunga su una riga sola: una parola non deve
@@ -202,11 +245,12 @@ final class NoteTextEditor: NSTextView {
     /// Applica carattere e colori della nota. La dimensione ricevuta è solo un
     /// punto di partenza: viene ricalcolata per riempire l'area disponibile.
     func apply(font: NSFont, textColor: StickyColor, insertionColor: StickyColor,
-               placeholder: String) {
+               placeholder: String, hint: String? = nil) {
         baseDescriptor = font.fontDescriptor
         bodyTextColor = textColor.nsColor
         self.insertionColor = insertionColor.nsColor
         self.placeholder = placeholder
+        self.hint = hint
         insertionPointColor = insertionColor.nsColor
         configureContainer()
         if appliedPointSize <= 0 { appliedPointSize = font.pointSize }

@@ -78,6 +78,17 @@ final class NoteManager: ObservableObject {
 
         // Copia di sicurezza all'avvio e pulizia programmata del cestino.
         if maintenance { _ = try? store.makeBackup() }
+        // Una volta sola: le note chiuse con la × nelle versioni precedenti
+        // erano solo nascoste; ora la × cestina, quindi finiscono nel cestino.
+        // (Chiave «.2»: la prima prova della × lasciava le note nascoste per un
+        // salvataggio in coda; così si recuperano anche quelle.)
+        let trashKey = "migration.hiddenNotesToTrash.2"
+        if maintenance, !UserDefaults.standard.bool(forKey: trashKey) {
+            if let moved = try? store.trashHiddenActiveNotes() {
+                UserDefaults.standard.set(true, forKey: trashKey)
+                PizzinuLog.app.info("Note nascoste spostate nel cestino: \(moved, privacy: .public)")
+            }
+        }
         if maintenance, let days = preferences.trashAutoPurgeDays {
             let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
             _ = try? store.purgeTrash(olderThan: cutoff)
@@ -85,6 +96,9 @@ final class NoteManager: ObservableObject {
         reload()
         PizzinuLog.app.info("Archivio aperto con \(self.allNotes.count, privacy: .public) note")
     }
+
+    /// Solo per il collaudo interno (`DebugSnapshots.stressKinds`).
+    func windowController(for id: UUID) -> NoteWindowController? { windowControllers[id] }
 
     // MARK: - Lettura
 
@@ -299,6 +313,23 @@ final class NoteManager: ObservableObject {
             note.checklistTotalCount = 0
             try? store.synchronizeChecklist(noteID: id, items: [])
         }
+        if !enabled, note.kind == .text, note.isMarkdown, MarkdownText.isTaskList(note.content) {
+            // Un foglio fatto solo di attività (per esempio una checklist passata
+            // al Markdown) torna checklist con spunte e livelli.
+            let items = MarkdownNoteCodec.checklistItems(fromTaskList: note.content, noteID: id)
+            note.content = NoteKindConversion.text(fromChecklistItems: items, noteID: id)
+            note.markdownSource = nil
+            note.kind = .checklist
+            note.isMarkdown = false
+            try? store.synchronizeChecklist(noteID: id, items: items)
+            note.checklistDoneCount = items.filter(\.isDone).count
+            note.checklistTotalCount = items.count
+            note.updatedAt = Date()
+            update(note, immediate: true)
+            windowControllers[id]?.contentKindChanged()
+            if let refreshed = try? store.note(id: id) { replaceInMemory(refreshed) }
+            return
+        }
         if note.kind == .text, note.isMarkdown != enabled {
             if enabled {
                 // Torna il sorgente con tutta la formattazione; se nel frattempo
@@ -417,6 +448,7 @@ final class NoteManager: ObservableObject {
 
     func archive(id: UUID, archived: Bool = true) {
         guard let note = note(id: id) else { return }
+        drainSaves()
         do {
             try store.setArchived(id: id, archived: archived)
             closeWindow(for: id)
@@ -429,7 +461,7 @@ final class NoteManager: ObservableObject {
     }
 
     func moveToTrash(id: UUID) {
-        flushSaves()
+        drainSaves()
         do {
             try store.moveToTrash(id: id)
             closeWindow(for: id)
@@ -440,15 +472,19 @@ final class NoteManager: ObservableObject {
     }
 
     func restoreFromTrash(id: UUID) {
+        drainSaves()
         do {
             try store.restoreFromTrash(id: id)
             reload()
+            // Torna sulla scrivania (se non era archiviata).
+            openWindow(for: id, animated: true)
         } catch {
             PizzinuLog.storage.error("Ripristino non riuscito: \(String(describing: error))")
         }
     }
 
     func deletePermanently(id: UUID) {
+        drainSaves()
         do {
             try store.deletePermanently(id: id)
             closeWindow(for: id)
@@ -498,7 +534,14 @@ final class NoteManager: ObservableObject {
         }
     }
 
+    /// Riporta le note nascoste con «Nascondi tutte le note» e porta davanti
+    /// quelle già sulla scrivania, anche se coperte da altre finestre (senza
+    /// fissarle in primo piano: lo fa solo la puntina). Archivio e cestino
+    /// non c'entrano.
     func showAll() {
+        for controller in windowControllers.values where controller.panel.isVisible {
+            controller.panel.orderFrontRegardless()
+        }
         for var note in allNotes where note.lifecycle == .active && !note.isVisible {
             note.isVisible = true
             replaceInMemory(note)
@@ -678,6 +721,15 @@ final class NoteManager: ObservableObject {
     }
 
     /// Scrive tutte le modifiche in attesa.
+    /// Scrive i salvataggi in sospeso e aspetta che la coda li abbia eseguiti.
+    /// Va chiamata prima di cestinare, archiviare, ripristinare o eliminare:
+    /// altrimenti un salvataggio ancora in coda (per esempio «nascosta» dalla ×)
+    /// arrivava dopo e riscriveva la nota com'era, annullando il cestino.
+    func drainSaves() {
+        flushSaves()
+        persistenceQueue.sync {}
+    }
+
     func flushSaves() {
         saveTimer?.cancel()
         saveTimer = nil

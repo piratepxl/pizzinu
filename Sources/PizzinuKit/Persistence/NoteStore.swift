@@ -267,9 +267,24 @@ public final class NoteStore: @unchecked Sendable {
                           .text(id.uuidString)])
     }
 
-    /// Ripristina una nota dal cestino.
+    /// Sposta nel cestino le note attive ma nascoste. Serve una volta sola,
+    /// passando alla versione in cui la × cestina invece di nascondere: chi le
+    /// aveva chiuse con la × le considerava già cancellate. Restituisce quante.
+    @discardableResult
+    public func trashHiddenActiveNotes() throws -> Int {
+        let now = Date().timeIntervalSince1970
+        let count = try database.query("SELECT COUNT(*) FROM notes WHERE deleted_at IS NULL AND is_archived = 0 AND is_visible = 0;",
+                                       row: { Int($0.integer(0)) }).first ?? 0
+        guard count > 0 else { return 0 }
+        try database.run("UPDATE notes SET deleted_at = ?, updated_at = ? WHERE deleted_at IS NULL AND is_archived = 0 AND is_visible = 0;",
+                         [.real(now), .real(now)])
+        return count
+    }
+
+    /// Ripristina una nota dal cestino: torna sulla scrivania (o nell'archivio,
+    /// se era archiviata).
     public func restoreFromTrash(id: UUID) throws {
-        try database.run("UPDATE notes SET deleted_at = NULL, updated_at = ? WHERE id = ?;",
+        try database.run("UPDATE notes SET deleted_at = NULL, is_visible = 1, updated_at = ? WHERE id = ?;",
                          [.real(Date().timeIntervalSince1970), .text(id.uuidString)])
     }
 

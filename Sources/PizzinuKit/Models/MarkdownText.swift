@@ -54,6 +54,19 @@ public enum MarkdownText {
         return Task(depth: indentDepth(of: Substring(line)), isDone: done, text: String(text))
     }
 
+    /// `true` se il testo è soltanto un elenco di attività (almeno una, righe
+    /// vuote ammesse): spegnendo il Markdown la nota torna checklist invece di
+    /// perdere caselle, spunte e livelli.
+    public static func isTaskList(_ source: String) -> Bool {
+        var found = false
+        for line in source.components(separatedBy: "\n") {
+            if line.trimmingCharacters(in: .whitespaces).isEmpty { continue }
+            guard task(in: line) != nil else { return false }
+            found = true
+        }
+        return found
+    }
+
     /// Una riga non vuota che non è un'attività, ripulita dal punto elenco.
     static func plainLine(_ line: String) -> Task? {
         let trimmed = line.trimmingCharacters(in: .whitespaces)

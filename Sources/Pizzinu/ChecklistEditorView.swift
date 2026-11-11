@@ -90,8 +90,10 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
     /// testo.
     private var isEditingEnabled = false
 
-    /// Dimensione minima leggibile delle voci.
-    private static let minPointSize: CGFloat = 9
+    /// Dimensione minima delle voci: sotto questa misura una lista si legge
+    /// male (l'utente: «ottimizzare sempre la leggibilità»). Se le voci non
+    /// entrano neanche così, si dispongono in colonne e poi l'elenco scorre.
+    private static let minPointSize: CGFloat = 12
     /// Altezza minima della riga, per le voci più piccole.
     private static let minimumRowHeight: CGFloat = 18
     /// Margine attorno all'inchiostro dentro la riga.
@@ -165,7 +167,10 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
         guard !isEditingEnabled else { return }
         isEditingEnabled = true
         window?.invalidateCursorRects(for: self)
-        if let first = rows.first { focus(first) }
+        if let first = rows.first {
+            focus(first)
+            reveal(first)
+        }
     }
 
     /// Chiude la scrittura e consegna le modifiche in sospeso.
@@ -201,6 +206,12 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
 
     private var rowHeight: CGFloat { rowHeight(for: fontSize) }
 
+    /// Area in cui stanno le voci, nelle coordinate della tela. Non si usa
+    /// `scrollView.contentSize`: la nota è inclinata e AppKit restituisce il
+    /// riquadro ruotato, più grande dello spazio vero (le voci uscivano dalla
+    /// carta). La scrollview occupa esattamente questa vista.
+    private var visibleArea: NSSize { bounds.size }
+
     /// Altezza della riga. Deve contenere l'inchiostro completo del carattere:
     /// un'altezza legata alla sola dimensione del punto lascia fuori accenti e
     /// discendenti (parentesi, `p`, virgole), che risultano tagliati.
@@ -211,53 +222,171 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
 
     // MARK: - Adattamento automatico
 
-    /// Ricalcola la dimensione del carattere perché tutte le voci entrino
-    /// nell'area della nota e la riempiano.
+    /// Ricalcola carattere e numero di colonne perché tutte le voci entrino
+    /// nell'area della nota e la riempiano con il testo più leggibile possibile.
     private func refitFontSize() {
-        let area = scrollView.contentSize
+        let area = visibleArea
         guard area.width > 60, area.height > 30 else { return }
         let entries = ChecklistTree(noteID: noteID, items: items).flattened
         guard !entries.isEmpty else { return }
-        let size = fittedFontSize(in: area, entries: entries)
-        guard abs(size - fontSize) > 0.1 else { return }
-        fontSize = size
+        let fitted = fittedLayout(in: area, entries: entries)
+        guard abs(fitted.size - fontSize) > 0.1 || fitted.columns != columnCount else { return }
+        fontSize = fitted.size
+        columnCount = fitted.columns
         applyFontToRows()
     }
 
-    /// Dimensione più grande che soddisfa entrambi i vincoli: tutte le righe
-    /// entro l'altezza e nessuna voce tagliata in larghezza. La ricerca è
-    /// binaria perché al crescere del carattere l'ingombro cresce sempre.
-    private func fittedFontSize(in area: NSSize, entries: [(item: ChecklistItem, depth: Int)]) -> CGFloat {
-        var low = Self.minPointSize
-        var high = max(Self.minPointSize, min(area.width, area.height))
-        var best = low
-        while high - low > 0.25 {
-            let mid = (low + high) / 2
-            if fits(pointSize: mid, in: area, entries: entries) {
-                best = mid
-                low = mid
-            } else {
-                high = mid
-            }
-        }
-        return best
+    /// Colonne in cui sono distribuite le voci: con tante voci il carattere
+    /// resterebbe minuscolo in una colonna sola, affiancandole cresce.
+    private var columnCount = 1
+
+    /// Misura sotto la quale si preferisce andare a capo pur di scrivere più grande.
+    private static let comfortablePointSize: CGFloat = 14
+    /// Misura massima, come il foglio Markdown: le voci riempiono la nota fin
+    /// lì anche andando a capo (nessuna parola viene comunque spezzata).
+    private static let maxPointSize: CGFloat = 24
+    /// Una colonna in più solo se il carattere cresce davvero (12 %): con un
+    /// guadagno minimo è più leggibile un elenco unico.
+    private static let columnGainThreshold: CGFloat = 1.12
+    /// Con un carattere già così grande non servono colonne.
+    private static let singleColumnEnough: CGFloat = 20
+    /// Larghezza minima di una colonna e massimo di colonne.
+    private static let minimumColumnWidth: CGFloat = 78
+    private static let maximumColumns = 4
+    private static func columnGap(for pointSize: CGFloat) -> CGFloat { max(10, pointSize * 0.9) }
+
+    private static func columnWidth(total: CGFloat, columns: Int, pointSize: CGFloat) -> CGFloat {
+        (total - columnGap(for: pointSize) * CGFloat(columns - 1)) / CGFloat(columns)
     }
 
+    /// Sceglie carattere e colonne. Per ogni numero di colonne si cerca la
+    /// misura più grande: prima con ogni voce su una riga, poi (se resterebbe
+    /// piccola) lasciando andare a capo le voci lunghe, senza ingrandire oltre
+    /// una misura comoda. Vince il numero di colonne con il carattere più
+    /// grande, ma una colonna in più deve far guadagnare almeno il 12 %. Se
+    /// nemmeno al minimo entra, carattere minimo e l'elenco scorre.
+    private func fittedLayout(in area: NSSize, entries: [(item: ChecklistItem, depth: Int)]) -> (size: CGFloat, columns: Int) {
+        var best: (size: CGFloat, columns: Int)?
+        for columns in 1...Self.maximumColumns {
+            guard Self.columnWidth(total: area.width, columns: columns, pointSize: Self.minPointSize) >= Self.minimumColumnWidth else { break }
+            guard let size = fittedFontSize(in: area, columns: columns, entries: entries) else { continue }
+            if let current = best {
+                if current.size >= Self.singleColumnEnough { break }
+                if size >= current.size * Self.columnGainThreshold { best = (size, columns) }
+            } else {
+                best = (size, columns)
+            }
+        }
+        if let best { return best }
+        // Non entra neanche al minimo: tante colonne quante ne stanno con una
+        // larghezza comoda, e l'elenco scorre.
+        var columns = 1
+        while columns < Self.maximumColumns,
+              Self.columnWidth(total: area.width, columns: columns + 1, pointSize: Self.minPointSize) >= Self.minimumColumnWidth * 1.4 {
+            columns += 1
+        }
+        return (Self.minPointSize, columns)
+    }
+
+    private func fittedFontSize(in area: NSSize, columns: Int, entries: [(item: ChecklistItem, depth: Int)]) -> CGFloat? {
+        let singleLine = largestSize(upTo: max(Self.minPointSize, min(area.width / CGFloat(columns), area.height, Self.maxPointSize))) {
+            fits(pointSize: $0, in: area, columns: columns, entries: entries, wrapping: false)
+        }
+        if let singleLine, singleLine >= Self.comfortablePointSize { return singleLine }
+        let wrapped = largestSize(upTo: Self.maxPointSize) {
+            fits(pointSize: $0, in: area, columns: columns, entries: entries, wrapping: true)
+        }
+        switch (singleLine, wrapped) {
+        case (nil, nil): return nil
+        default: return max(singleLine ?? 0, wrapped ?? 0)
+        }
+    }
+
+    /// Ricerca binaria: al crescere del carattere l'ingombro cresce sempre.
+    /// `nil` se nemmeno la misura minima va bene.
+    private func largestSize(upTo limit: CGFloat, _ accepts: (CGFloat) -> Bool) -> CGFloat? {
+        guard accepts(Self.minPointSize) else { return nil }
+        var low = Self.minPointSize
+        var high = max(low, limit)
+        if accepts(high) { return high }
+        while high - low > 0.25 {
+            let mid = (low + high) / 2
+            if accepts(mid) { low = mid } else { high = mid }
+        }
+        return low
+    }
+
+    /// Le voci entrano in `columns` colonne alte quanto l'area? Senza andare a
+    /// capo ogni voce deve stare su una riga; andando a capo nessuna parola può
+    /// essere più larga della colonna (sarebbe spezzata a metà).
     private func fits(pointSize: CGFloat,
                       in area: NSSize,
-                      entries: [(item: ChecklistItem, depth: Int)]) -> Bool {
-        let total = CGFloat(entries.count) * rowHeight(for: pointSize) + Self.bottomPadding
-        guard total <= area.height else { return false }
-
+                      columns: Int,
+                      entries: [(item: ChecklistItem, depth: Int)],
+                      wrapping: Bool) -> Bool {
         let font = Theme.noteFont(named: noteFontName, size: pointSize)
+        let base = rowHeight(for: pointSize)
+        let oneLine = Self.wrappedTextHeight("X", font: font, width: 10_000)
+        let columnWidth = Self.columnWidth(total: area.width, columns: columns, pointSize: pointSize)
+        var heights: [CGFloat] = []
         for entry in entries {
-            let indent = Self.indentation(for: pointSize) * CGFloat(entry.depth)
-            let available = area.width - indent - Self.labelGap(for: pointSize) - 4
-            guard available > 20 else { return false }
-            let width = (sampleText(for: entry) as NSString).size(withAttributes: [.font: font]).width
-            if width > available { return false }
+            let width = Self.textWidth(rowWidth: columnWidth, depth: entry.depth, pointSize: pointSize)
+            guard width > 20 else { return false }
+            let text = sampleText(for: entry)
+            if wrapping {
+                for word in text.split(whereSeparator: { $0.isWhitespace }) {
+                    if (String(word) as NSString).size(withAttributes: [.font: font]).width > width { return false }
+                }
+                heights.append(base + max(0, Self.wrappedTextHeight(text, font: font, width: width) - oneLine))
+            } else {
+                if (text as NSString).size(withAttributes: [.font: font]).width > width { return false }
+                heights.append(base)
+            }
         }
-        return true
+        return Self.columnsNeeded(heights, capacity: area.height - Self.bottomPadding) <= columns
+    }
+
+    /// Colonne necessarie riempiendole dall'alto in basso, nell'ordine.
+    private static func columnsNeeded(_ heights: [CGFloat], capacity: CGFloat) -> Int {
+        var columns = 1
+        var used: CGFloat = 0
+        for height in heights {
+            if height > capacity { return Int.max }
+            if used + height > capacity {
+                columns += 1
+                used = 0
+            }
+            used += height
+        }
+        return columns
+    }
+
+    /// Altezza delle colonne per distribuire le voci in modo equilibrato: la
+    /// più bassa con cui bastano `columns` colonne.
+    private static func balancedCapacity(_ heights: [CGFloat], columns: Int) -> CGFloat {
+        let total = heights.reduce(0, +)
+        var low = max(heights.max() ?? 0, total / CGFloat(columns))
+        var high = max(low, total)
+        while high - low > 0.5 {
+            let mid = (low + high) / 2
+            if columnsNeeded(heights, capacity: mid) <= columns { high = mid } else { low = mid }
+        }
+        return high
+    }
+
+    /// Spazio per il testo di una voce: tolti rientro, casella e margini del campo.
+    private static func textWidth(rowWidth: CGFloat, depth: Int, pointSize: CGFloat) -> CGFloat {
+        rowWidth - indentation(for: pointSize) * CGFloat(depth) - labelGap(for: pointSize) - 4 - fieldTextPadding
+    }
+
+    /// Margine interno orizzontale di un campo senza bordo (2 pt per lato).
+    private static let fieldTextPadding: CGFloat = 4
+
+    private static func wrappedTextHeight(_ text: String, font: NSFont, width: CGFloat) -> CGFloat {
+        let rect = (text as NSString).boundingRect(with: NSSize(width: max(1, width), height: .greatestFiniteMagnitude),
+                                                   options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                                   attributes: [.font: font])
+        return ceil(rect.height)
     }
 
     /// Testo su cui misurare la voce: quello scritto, oppure il suggerimento
@@ -348,9 +477,13 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
             field.target = self
             field.action = #selector(fieldAction(_:))
             field.identifier = NSUserInterfaceItemIdentifier(entry.item.id.uuidString)
-            field.lineBreakMode = .byClipping
-            field.usesSingleLineMode = true
-            field.cell?.usesSingleLineMode = true
+            // Le voci lunghe vanno a capo dentro il foglio invece di uscirne.
+            field.usesSingleLineMode = false
+            field.cell?.usesSingleLineMode = false
+            field.cell?.wraps = true
+            field.cell?.isScrollable = false
+            field.lineBreakMode = .byWordWrapping
+            field.cell?.truncatesLastVisibleLine = false
             field.placeholderString = Self.placeholder(for: entry.depth)
             field.attributedStringValue = attributedText(for: entry.item, font: font)
 
@@ -390,7 +523,7 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
         paragraph.lineSpacing = 0
         paragraph.paragraphSpacing = 0
         paragraph.paragraphSpacingBefore = 0
-        paragraph.lineBreakMode = .byClipping
+        paragraph.lineBreakMode = .byWordWrapping
         return paragraph
     }
 
@@ -401,31 +534,78 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
         layoutRows()
     }
 
+    /// Altezza di un campo con una riga sola, per allineare la casella alla
+    /// prima riga anche quando la voce va a capo.
+    private func singleLineFieldHeight(font: NSFont) -> CGFloat {
+        let probe = NSTextFieldCell(textCell: "Xg")
+        probe.isBordered = false
+        probe.font = font
+        return probe.cellSize.height
+    }
+
     private func layoutRows() {
-        let width = max(40, scrollView.contentSize.width)
-        let contentHeight = CGFloat(rows.count) * rowHeight + Self.bottomPadding
-        var y: CGFloat = max(0, (scrollView.contentSize.height - contentHeight) / 2)
+        let width = max(40, visibleArea.width)
         let box = Self.boxSide(for: fontSize)
         let gap = Self.labelGap(for: fontSize)
         let step = Self.indentation(for: fontSize)
         let font = Theme.noteFont(named: noteFontName, size: fontSize)
+        let base = rowHeight
+        let single = singleLineFieldHeight(font: font)
+        let columns = max(1, min(columnCount, rows.count))
+        let columnGap = Self.columnGap(for: fontSize)
+        let columnWidth = columns == 1 ? width : Self.columnWidth(total: width, columns: columns, pointSize: fontSize)
+
+        // Prima le altezze (ogni voce alta quanto il suo testo nella colonna),
+        // poi la distribuzione nelle colonne, infine le posizioni.
+        var heights: [CGFloat] = []
+        var fieldHeights: [CGFloat] = []
         for row in rows {
-            let indent = step * CGFloat(row.depth)
-            let height = rowHeight
-            // La casella si allinea al centro delle minuscole, non della riga:
+            let fieldX = step * CGFloat(row.depth) + gap
+            let fieldWidth = max(30, columnWidth - fieldX - 4)
+            let measured = row.field.cell?.cellSize(forBounds: NSRect(x: 0, y: 0, width: fieldWidth, height: 10_000)).height ?? single
+            let fieldHeight = max(single, measured)
+            fieldHeights.append(fieldHeight)
+            heights.append(base + fieldHeight - single)
+        }
+        let capacity = columns == 1 ? heights.reduce(0, +) : Self.balancedCapacity(heights, columns: columns)
+
+        var placements: [(column: Int, y: CGFloat)] = []
+        var column = 0
+        var used: CGFloat = 0
+        var tallest: CGFloat = 0
+        for height in heights {
+            if used > 0, used + height > capacity + 0.5, column < columns - 1 {
+                column += 1
+                used = 0
+            }
+            placements.append((column, used))
+            used += height
+            tallest = max(tallest, used)
+        }
+        let contentHeight = tallest + Self.bottomPadding
+        // L'elenco parte dall'alto, come il foglio Markdown: tutto lo spazio
+        // della nota è a disposizione delle voci (prima era centrato e lasciava
+        // carta vuota sopra).
+        let top: CGFloat = 0
+
+        for (index, row) in rows.enumerated() {
+            let columnX = CGFloat(placements[index].column) * (columnWidth + columnGap)
+            let y = top + placements[index].y
+            let indent = columnX + step * CGFloat(row.depth)
+            // La prima riga sta dove starebbe una voce corta; le altre scendono.
+            let fieldY = y + (base - single) / 2
+            // La casella si allinea al centro delle minuscole della prima riga:
             // così resta accanto al testo qualunque sia il carattere.
-            let fieldHeight = row.field.cell?.cellSize(forBounds: NSRect(x: 0, y: 0, width: 10_000, height: height)).height ?? height
-            let fieldY = y + (height - fieldHeight) / 2
-            let baseline = fieldY + fieldHeight / 2 + (font.ascender + font.descender) / 2
+            let baseline = fieldY + single / 2 + (font.ascender + font.descender) / 2
             let xHeightCenter = baseline - font.xHeight / 2
             row.checkbox.frame = NSRect(x: indent, y: xHeightCenter - box / 2, width: box, height: box)
             row.checkbox.inkColor = currentTextColor
             let fieldX = indent + gap
-            row.field.frame = NSRect(x: fieldX, y: fieldY, width: max(30, width - fieldX - 4), height: fieldHeight)
-            y += height
+            let fieldWidth = max(30, columnX + columnWidth - fieldX - 4)
+            row.field.frame = NSRect(x: fieldX, y: fieldY, width: fieldWidth, height: fieldHeights[index])
         }
         // Spazio finale per poter aggiungere una voce con un clic sotto l'ultima.
-        let height = max(contentHeight, scrollView.contentSize.height)
+        let height = max(contentHeight, visibleArea.height)
         if canvas.frame.size != NSSize(width: width, height: height) {
             canvas.frame = NSRect(x: 0, y: 0, width: width, height: height)
         }
@@ -437,6 +617,12 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
         pendingFocusID = nil
         guard let row = rows.first(where: { $0.itemID == id }) else { return }
         focus(row)
+        reveal(row)
+    }
+
+    /// Porta in vista la voce in cui si scrive, quando l'elenco scorre.
+    private func reveal(_ row: Row) {
+        canvas.scrollToVisible(row.field.frame.union(row.checkbox.frame).insetBy(dx: 0, dy: -6))
     }
 
     // MARK: - Interazione
@@ -465,6 +651,10 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
         if let index = items.firstIndex(where: { $0.id == id }), items[index].text != text {
             items[index].text = text
         }
+        // La voce va a capo mentre si scrive: le righe sotto scendono e quella
+        // in scrittura resta in vista.
+        layoutRows()
+        if let row = rows.first(where: { $0.itemID == id }) { reveal(row) }
         scheduleCommit()
     }
 
@@ -481,7 +671,8 @@ final class ChecklistEditorView: NSView, NSTextFieldDelegate {
         guard let field = control as? NSTextField, let id = identifier(of: field) else { return false }
 
         switch commandSelector {
-        case #selector(NSResponder.insertNewline(_:)):
+        case #selector(NSResponder.insertNewline(_:)),
+             #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):
             // Invio su una voce vuota rientrata la riporta indietro di un
             // livello, come negli elenchi dei programmi di scrittura.
             if field.stringValue.isEmpty, let row = rows.first(where: { $0.itemID == id }), row.depth > 0 {

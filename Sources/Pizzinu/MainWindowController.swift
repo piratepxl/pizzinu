@@ -82,10 +82,6 @@ final class MainWindowModel: ObservableObject {
         manager.openWindow(for: note.id)
     }
 
-    func setVisibility(_ note: Note, visible: Bool) {
-        manager.setVisible(id: note.id, visible: visible)
-    }
-
     func duplicate(_ note: Note) {
         manager.duplicate(id: note.id)
     }

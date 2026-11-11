@@ -9,7 +9,9 @@
 
 import AppKit
 
-let application = NSApplication.shared
+// La sottoclasse annota le eccezioni intercettate da AppKit (ExceptionLog.swift).
+let application = PizzinuApplication.shared
+ExceptionLog.install()
 let applicationDelegate = AppDelegate()
 application.delegate = applicationDelegate
 application.run()

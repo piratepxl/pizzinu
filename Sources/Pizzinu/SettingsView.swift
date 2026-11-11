@@ -14,7 +14,8 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var manager: NoteManager
 
-    @State private var launchAtLogin = LaunchAtLogin.isEnabled
+    @State private var launchAtLogin = LaunchAtLogin.isWanted
+    @State private var launchCondition = LaunchAtLogin.condition
     @State private var launchAtLoginError: String?
     @State private var fontOptions: [NoteFontOption] = []
 
@@ -29,7 +30,14 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 520, height: 640)
-        .onAppear { fontOptions = FontLibrary.reload() }
+        .onAppear {
+            fontOptions = FontLibrary.reload()
+            refreshLaunchAtLogin()
+        }
+        // Tornando da Impostazioni di Sistema (approvazione data) lo stato si aggiorna.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshLaunchAtLogin()
+        }
     }
 
     // MARK: - Sezioni
@@ -146,6 +154,19 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            switch launchCondition {
+            case .needsApproval:
+                Text("macOS aspetta il tuo permesso: attiva Pizzinu in Impostazioni di Sistema ▸ Generali ▸ Elementi login.")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                Button("Apri Elementi login") { LaunchAtLogin.openLoginItemsSettings() }
+            case .notInApplications:
+                Text("Perché l'avvio automatico funzioni, sposta Pizzinu nella cartella Applicazioni e riaprila da lì.")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            case .ok, .unsupported:
+                EmptyView()
+            }
             if let launchAtLoginError {
                 Text(launchAtLoginError)
                     .font(.caption)
@@ -192,6 +213,11 @@ struct SettingsView: View {
                 set: { value in manager.updatePreferences { $0.trashAutoPurgeDays = value } })
     }
 
+    private func refreshLaunchAtLogin() {
+        launchAtLogin = LaunchAtLogin.isWanted
+        launchCondition = LaunchAtLogin.condition
+    }
+
     private var launchAtLoginBinding: Binding<Bool> {
         Binding(get: { launchAtLogin },
                 set: { enabled in
@@ -201,7 +227,8 @@ struct SettingsView: View {
                     } catch {
                         launchAtLoginError = error.localizedDescription
                     }
-                    launchAtLogin = LaunchAtLogin.isEnabled
+                    launchAtLogin = LaunchAtLogin.isWanted
+                    launchCondition = LaunchAtLogin.condition
                 })
     }
 }

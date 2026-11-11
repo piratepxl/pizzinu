@@ -666,9 +666,8 @@ private struct NoteInspector: View {
                 actionButton("Ripristina", icon: "arrow.uturn.backward", prominent: true) { model.restore(note) }
                 actionButton("Elimina per sempre", icon: "trash.slash", role: .destructive) { model.deletePermanently(note) }
             } else {
-                actionButton(note.isVisible ? "Nascondi dal desktop" : "Mostra sul desktop",
-                             icon: note.isVisible ? "eye.slash" : "eye", prominent: !note.isVisible) {
-                    model.setVisibility(note, visible: !note.isVisible)
+                if !note.isArchived {
+                    actionButton("Mostra sul desktop", icon: "eye", prominent: true) { model.open(note) }
                 }
                 HStack(spacing: 8) {
                     actionButton("Duplica", icon: "plus.square.on.square") { model.duplicate(note) }
@@ -712,8 +711,8 @@ private struct NoteContextMenu: View {
             Button("Ripristina") { model.restore(note) }
             Button("Elimina per sempre") { model.deletePermanently(note) }
         } else {
-            Button(note.isVisible ? "Nascondi dal desktop" : "Mostra sul desktop") {
-                model.setVisibility(note, visible: !note.isVisible)
+            if !note.isArchived {
+                Button("Mostra sul desktop") { model.open(note) }
             }
             Button("Duplica") { model.duplicate(note) }
             Divider()

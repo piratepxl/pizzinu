@@ -254,7 +254,15 @@ final class MarkdownEditorView: NSView, NSTextViewDelegate {
                                                       in: container) { rect, _ in
                     let inText = rect.offsetBy(dx: self.textView.textContainerOrigin.x, dy: self.textView.textContainerOrigin.y)
                     let inSelf = self.convert(inText, from: self.textView)
-                    self.addCursorRect(inSelf.intersection(self.bounds), cursor: .pointingHand)
+                    // Una casella o un link fuori dalla parte visibile (scorsa o
+                    // sotto i comandi) dà un'intersezione nulla, con coordinate
+                    // infinite: AppKit la rifiuta con un'eccezione e l'app si
+                    // chiudeva. Si aggiungono solo rettangoli veri.
+                    let visible = inSelf.intersection(self.bounds)
+                    guard !visible.isNull, !visible.isEmpty,
+                          visible.origin.x.isFinite, visible.origin.y.isFinite,
+                          visible.width.isFinite, visible.height.isFinite else { return }
+                    self.addCursorRect(visible, cursor: .pointingHand)
                 }
             }
         }

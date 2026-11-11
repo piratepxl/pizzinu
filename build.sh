@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 APP_NAME="Pizzinu"
 BUNDLE_ID="it.pizzinu.app"
-VERSION="1.1.0"
+VERSION="1.1.1"
 OUT="build/${APP_NAME}.app"
 CONFIG="${CONFIG:-release}"
 
