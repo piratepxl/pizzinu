@@ -50,6 +50,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
             DebugSnapshots.stressKinds()
             exit(0)
         }
+        if let video = ProcessInfo.processInfo.environment["PIZZINU_VIDEO_DIR"] {
+            DebugSnapshots.renderVideoAssets(in: URL(fileURLWithPath: video, isDirectory: true))
+            NSApp.terminate(nil)
+            return
+        }
         if let directory = DebugSnapshots.directory {
             DebugSnapshots.run(in: directory)
             NSApp.terminate(nil)

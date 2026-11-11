@@ -90,6 +90,70 @@ enum DebugSnapshots {
         renderPaperFinishes(in: directory.appendingPathComponent("carta", isDirectory: true))
     }
 
+    /// Immagini per il video promozionale (fondo trasparente, note dritte con
+    /// `PIZZINU_SNAPSHOT_TILT=0`, lingua con `-AppleLanguages "(en)"`):
+    ///     PIZZINU_VIDEO_DIR=/cartella PIZZINU_SNAPSHOT_TILT=0 build/Pizzinu.app/Contents/MacOS/Pizzinu
+    static func renderVideoAssets(in directory: URL) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        FontLibrary.reload()
+        func out(_ name: String) -> URL { directory.appendingPathComponent(name) }
+
+        // 1. La nota nasce vuota e si scrive lettera per lettera.
+        var typing = Note(content: "", colorID: .lemon, paperShape: .soft)
+        typing.paperSize = CGSize(width: 260, height: 230)
+        let sentence = "Call Luca at 5"
+        for count in 0...sentence.count {
+            typing.content = String(sentence.prefix(count))
+            render(note: typing, shape: .soft, to: out(String(format: "type-%02d.png", count)), controls: false)
+        }
+        // 2. Puntina: la stessa nota senza e con la puntina.
+        var pinned = Note(content: "Pay rent by Friday", colorID: .pink, paperShape: .soft)
+        pinned.paperSize = CGSize(width: 250, height: 220)
+        render(note: pinned, shape: .soft, to: out("pin-off.png"), controls: false)
+        pinned.isPinned = true
+        render(note: pinned, shape: .soft, to: out("pin-on.png"), controls: false)
+        // 3. Promemoria.
+        var reminder = Note(content: "Dentist", colorID: .skyBlue, paperShape: .soft)
+        reminder.paperSize = CGSize(width: 250, height: 220)
+        reminder.reminderAt = Calendar.current.date(bySettingHour: 15, minute: 30, second: 0, of: Date())
+        render(note: reminder, shape: .soft, to: out("reminder.png"), controls: false)
+        // 4. Checklist che si spunta, voce dopo voce.
+        var list = Note(kind: .checklist, colorID: .pastelGreen, paperShape: .soft)
+        list.paperSize = CGSize(width: 250, height: 250)
+        let groceries = ["Milk", "Bread", "Coffee", "Basil"]
+        for done in 0...groceries.count {
+            let items = groceries.enumerated().map {
+                ChecklistItem(noteID: list.id, text: $0.element, isDone: $0.offset < done, sortIndex: $0.offset)
+            }
+            render(note: list, shape: .soft, to: out("check-\(done).png"), controls: false, checklist: items)
+        }
+        // 5. Lista lunga che si dispone in colonne.
+        var columns = Note(kind: .checklist, colorID: .lemon, paperShape: .soft)
+        columns.paperSize = CGSize(width: 340, height: 250)
+        let many = ["Milk", "Bread", "Eggs", "Coffee", "Basil", "Tomatoes", "Mozzarella", "Olive oil", "Salt", "Flour", "Butter", "Apples"]
+        let manyItems = many.enumerated().map { ChecklistItem(noteID: columns.id, text: $0.element, isDone: $0.offset < 3, sortIndex: $0.offset) }
+        render(note: columns, shape: .soft, to: out("columns.png"), controls: false, checklist: manyItems)
+        // 6. Da testo a foglio Markdown.
+        let markdownSource = "# Saturday\n- [x] Book the **table**\n- [ ] Cake for ==Giulia==\n> Bring the present"
+        var plain = Note(content: "Saturday\nBook the table\nCake for Giulia\nBring the present", colorID: .orange, paperShape: .soft)
+        plain.paperSize = CGSize(width: 290, height: 250)
+        render(note: plain, shape: .soft, to: out("md-plain.png"), controls: false)
+        var sheet = Note(content: markdownSource, colorID: .orange, paperShape: .soft, isMarkdown: true)
+        sheet.paperSize = plain.paperSize
+        render(note: sheet, shape: .soft, to: out("md-sheet.png"), controls: false)
+        // 7. Testo trascinato sulla scrivania.
+        var dropped = Note(content: "Simplicity is the ultimate sophistication.", colorID: .purple, paperShape: .soft)
+        dropped.paperSize = CGSize(width: 260, height: 230)
+        render(note: dropped, shape: .soft, to: out("dropped.png"), controls: false)
+        // 8. Galleria dei temi (tranne il vetro, che nelle istantanee non si vede).
+        let colors: [NoteColorID] = [.lemon, .pink, .skyBlue, .orange, .pastelGreen, .purple]
+        for (index, shape) in PaperShape.allCases.enumerated() where shape != .liquidGlass {
+            var note = Note(content: shape.displayName, colorID: colors[index % colors.count], paperShape: shape)
+            note.paperSize = shape.preferredPaperSize(from: CGSize(width: 230, height: 200))
+            render(note: note, shape: shape, to: out(String(format: "theme-%02d.png", index)), controls: false)
+        }
+    }
+
     /// Aspetto della carta sul tema «Morbida»: bordo scuro di prima e bordo
     /// tenue di adesso, e la grana pronta per i temi delle occasioni.
     static func renderPaperFinishes(in directory: URL) {
