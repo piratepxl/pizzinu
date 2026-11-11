@@ -13,6 +13,11 @@
   <a href="https://t.me/pizzinuapp"><img src="https://img.shields.io/badge/Telegram-@pizzinuapp-26A5E4?logo=telegram&amp;logoColor=white" alt="Telegram"></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/piratepxl/pizzinu/releases/download/v1.2.0/Pizzinu-promo.mp4"><img src="docs/images/promo.webp" width="820" alt="Pizzinu in 40 secondi: pizzino al volo, trascina il testo, puntina, promemoria, checklist, Markdown e temi"></a><br>
+  <sub>▶︎ <a href="https://github.com/piratepxl/pizzinu/releases/download/v1.2.0/Pizzinu-promo.mp4">Guarda il video completo con l'audio</a> (MP4, 40 s)</sub>
+</p>
+
 <p align="center"><img src="docs/images/banner.png" width="820" alt="Pizzinu: il tuo desk reimmaginato"></p>
 
 **Post-it digitali per macOS.** Pizzinu mostra ogni nota come un vero foglietto adesivo

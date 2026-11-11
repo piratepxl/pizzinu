@@ -27,6 +27,11 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/piratepxl/pizzinu/releases/download/v1.2.0/Pizzinu-promo.mp4"><img src="docs/images/promo.webp" width="820" alt="Pizzinu in 40 seconds: quick notes, drag and drop, pin, reminders, checklists, Markdown and themes"></a><br>
+  <sub>▶︎ <a href="https://github.com/piratepxl/pizzinu/releases/download/v1.2.0/Pizzinu-promo.mp4">Watch the full video with sound</a> (MP4, 40 s)</sub>
+</p>
+
+<p align="center">
   <img src="docs/images/banner.png" width="820" alt="Pizzinu: your desk, reimagined">
 </p>
 
