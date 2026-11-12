@@ -61,6 +61,41 @@ public enum NoteColorID: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// Colori dell'inchiostro, cioè del testo scritto. Il predefinito è un
+/// grigio scuro (grafite): più morbido del nero sulla carta colorata.
+public enum InkColorID: String, Codable, CaseIterable, Sendable {
+    case graphite
+    case black
+    case blue
+    case red
+    case green
+    case sepia
+
+    public static let defaultInk: InkColorID = .graphite
+
+    public var displayName: String {
+        switch self {
+        case .graphite: L("Grafite")
+        case .black: L("Nero")
+        case .blue: L("Blu penna")
+        case .red: L("Rosso")
+        case .green: L("Verde")
+        case .sepia: L("Seppia")
+        }
+    }
+
+    public var color: StickyColor {
+        switch self {
+        case .graphite: StickyColor(hex: "#3B3A38")!
+        case .black: StickyColor(hex: "#151413")!
+        case .blue: StickyColor(hex: "#183C8C")!
+        case .red: StickyColor(hex: "#981B16")!
+        case .green: StickyColor(hex: "#1E562C")!
+        case .sepia: StickyColor(hex: "#4E3219")!
+        }
+    }
+}
+
 /// Modalità grafica del foglietto.
 public enum GraphicMode: String, Codable, CaseIterable, Sendable {
     /// Carta con volume, ombra morbida, piega evidente e gradienti delicati.
@@ -107,7 +142,10 @@ public struct NotePalette: Equatable, Sendable {
     public let mode: GraphicMode
 
     /// Costruisce la palette a partire da un colore e da una modalità grafica.
-    public static func make(base: StickyColor, mode: GraphicMode) -> NotePalette {
+    /// - Parameter ink: colore del testo scelto per la nota; `nil` usa
+    ///   l'inchiostro predefinito (grafite, o avorio sulle carte scure).
+    ///   I comandi e le scritte secondarie restano nel colore predefinito.
+    public static func make(base: StickyColor, mode: GraphicMode, ink: StickyColor? = nil) -> NotePalette {
         switch mode {
         case .realistic:
             let top = base.adjustingBrightness(by: 0.055).adjustingSaturation(by: -0.02)
@@ -124,7 +162,7 @@ public struct NotePalette: Equatable, Sendable {
                                flapFront: flapFront,
                                flapShadow: flapShadow,
                                shadow: StickyColor.black.withAlpha(0.20),
-                               text: readableText(on: base),
+                               text: ink ?? readableText(on: base),
                                secondaryText: readableText(on: base).withAlpha(0.62),
                                accent: accentColor(on: base),
                                mode: mode)
@@ -142,7 +180,7 @@ public struct NotePalette: Equatable, Sendable {
                                flapFront: flapFront,
                                flapShadow: base.adjustingBrightness(by: -0.24).withAlpha(0.18),
                                shadow: StickyColor.black.withAlpha(0.10),
-                               text: readableText(on: base),
+                               text: ink ?? readableText(on: base),
                                secondaryText: readableText(on: base).withAlpha(0.60),
                                accent: accentColor(on: base),
                                mode: mode)
@@ -150,9 +188,9 @@ public struct NotePalette: Equatable, Sendable {
     }
 
     /// Sceglie un colore del testo leggibile sulla superficie data, preferendo
-    /// il nero morbido dell'identità di Pizzinu oppure l'avorio.
+    /// il grigio scuro (grafite) oppure l'avorio.
     public static func readableText(on surface: StickyColor) -> StickyColor {
-        let dark = StickyColor(red: 0.129, green: 0.129, blue: 0.114)   // #211F1D
+        let dark = InkColorID.defaultInk.color
         let light = StickyColor(red: 0.976, green: 0.973, blue: 0.960)  // #F9F8F5
         return surface.contrastRatio(with: dark) >= surface.contrastRatio(with: light) ? dark : light
     }

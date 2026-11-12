@@ -46,6 +46,7 @@ public enum MarkdownNoteCodec {
         if let custom = note.customColorHex { meta.append(("customColor", quoted(custom))) }
         if let shape = note.paperShape { meta.append(("theme", shape.rawValue)) }
         if let font = note.noteFontName { meta.append(("font", quoted(font))) }
+        if let ink = note.inkColorID { meta.append(("ink", ink.rawValue)) }
         if note.opacity < 1 { meta.append(("opacity", format(note.opacity))) }
         meta.append(("size", "\(format(note.paperWidth))x\(format(note.paperHeight))"))
         if let x = note.originX, let y = note.originY {
@@ -122,6 +123,7 @@ public enum MarkdownNoteCodec {
         note.customColorHex = meta["customColor"].flatMap { StickyColor(hex: $0) != nil ? $0 : nil }
         note.paperShape = meta["theme"].map(PaperShape.resolving)
         note.noteFontName = meta["font"]
+        note.inkColorID = meta["ink"].flatMap(InkColorID.init(rawValue:))
         if let opacity = meta["opacity"].flatMap(Double.init) { note.opacity = min(max(opacity, 0.55), 1) }
         if let size = meta["size"].flatMap({ pair($0, separator: "x") }) {
             note.paperSize = CGSize(width: size.0, height: size.1)

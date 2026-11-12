@@ -73,14 +73,16 @@ connessione è il controllo giornaliero degli aggiornamenti su GitHub, anonimo e
   completamento bidirezionale; Invio su una voce vuota rientrata la riporta indietro di un livello.
 - **Grafica realistica del foglietto** disegnata con tracciati vettoriali: ombra morbida,
   superficie con variazione di luminosità, bordo naturale. Nitida su Retina a ogni dimensione.
-- **14 temi della carta**, assegnati a caso alle note nuove e cambiabili per singola nota:
+- **15 temi della carta**, assegnati a caso alle note nuove e cambiabili per singola nota:
   Morbida, Increspata, Arricciata, Staccata, Nastrata, Graffettata, Rotonda, Strappata,
-  Segnalibro (nastro largo e basso, con la punta), Quadrettata, Blocco Lungo, Spiralata, Biglietto Doppio e **Liquid Glass**
+  Segnalibro (nastro largo e basso, con la punta), Quadrettata, Blocco Lungo, Spiralata, Biglietto Doppio, **Iperrealista** (un post-it vero attaccato al muro: striscia adesiva, carta che si stacca, angolo sollevato) e **Liquid Glass**
   (vetro di sistema `NSGlassEffectView` su macOS 26, senza riflessi aggiunti; il pannello mantiene sempre l'aspetto attivo, così il vetro resta trasparente anche quando la nota non ha il fuoco — soluzione sperimentale, vedi docs/LIMITS.md).
 - **Palette di 12 colori** con un nome per ciascuno, più **colore personalizzato** per nota. I temi con
   una carta di colore proprio (Strappata, Segnalibro, Quadrettata, Blocco Lungo, Spiralata, Biglietto
   Doppio, Liquid Glass) non mostrano la scelta del colore.
 - **Carattere della nota** scelto per singola nota, con i caratteri della cartella `Fonts`.
+- **Colore del testo** per singola nota: grafite (grigio scuro, predefinito), nero, blu penna,
+  rosso, verde, seppia.
   La dimensione si adatta da sola al testo: la nota resta sempre piena.
 - **Interazione**: clic singolo = trascina, doppio clic = scrivi, Esc = chiudi la scrittura.
 - **Salvataggio automatico** differito su SQLite; posizione e dimensioni persistenti.

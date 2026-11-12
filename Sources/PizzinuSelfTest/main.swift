@@ -230,6 +230,45 @@ do {
     checkEqual(migrata?.noteFontName, "GochiHand-Regular", "un carattere non ridistribuibile passa all'equivalente libero")
     checkEqual(FontAliases.resolve("TexasHero"), "KaushanScript-Regular", "anche preferenze e file importati usano il carattere libero")
     checkEqual(FontAliases.resolve("GrandHotel-Regular"), "GrandHotel-Regular", "i caratteri liberi restano com'erano")
+    checkEqual(migrata?.inkColorID, nil, "dopo la migrazione le vecchie note hanno l'inchiostro predefinito")
+
+    // Colore del testo: si salva, si rilegge e si toglie.
+    if var colorata = migrata {
+        colorata.inkColorID = .blue
+        try store.upsert(colorata)
+        checkEqual(try store.note(id: colorata.id)?.inkColorID, .blue, "il colore del testo si salva nell'archivio")
+        colorata.inkColorID = nil
+        try store.upsert(colorata)
+        checkEqual(try store.note(id: colorata.id)?.inkColorID, nil, "il colore del testo torna al predefinito")
+    }
+}
+
+section("Colore del testo")
+do {
+    let giallo = NoteColorID.lemon.baseColor
+    let predefinita = NotePalette.make(base: giallo, mode: .realistic)
+    checkEqual(predefinita.text, InkColorID.graphite.color, "l'inchiostro predefinito è la grafite, non il nero")
+    check(predefinita.text != InkColorID.black.color, "grafite e nero sono colori diversi")
+    let rossa = NotePalette.make(base: giallo, mode: .realistic, ink: InkColorID.red.color)
+    checkEqual(rossa.text, InkColorID.red.color, "il colore scelto diventa il colore del testo")
+    checkEqual(rossa.secondaryText, predefinita.secondaryText, "comandi e scritte secondarie restano nel colore predefinito")
+    var nota = Note(content: "x", colorID: .pink)
+    checkEqual(nota.palette(globalMode: .realistic).text, InkColorID.graphite.color, "una nota nuova scrive in grafite")
+    nota.inkColorID = .green
+    checkEqual(nota.palette(globalMode: .realistic).text, InkColorID.green.color, "la nota usa il suo inchiostro")
+    // Grafite e nero: leggibili come testo normale (4,5:1) su ogni carta;
+    // gli inchiostri colorati almeno come testo grande (3:1), perché il
+    // testo dei pizzini è grande e il colore è una scelta dell'utente.
+    for ink in InkColorID.allCases {
+        let soglia = (ink == .graphite || ink == .black) ? 4.5 : 3.0
+        for carta in NoteColorID.allCases {
+            check(carta.baseColor.contrastRatio(with: ink.color) >= soglia,
+                  "l'inchiostro \(ink.rawValue) si legge sulla carta \(carta.rawValue)")
+        }
+    }
+    let esportata = MarkdownNoteCodec.encode(ExportedNote(note: nota))
+    check(esportata.contains("ink: green"), "il colore del testo va nel file Markdown")
+    checkEqual(MarkdownNoteCodec.decode(esportata, fileName: "x.md").inkColorID, .green, "e torna reimportandolo")
 }
 
 // MARK: - Checklist a tre livelli
@@ -394,7 +433,7 @@ do {
     }
 
     // La scelta del testo deve sempre preferire il contrasto maggiore.
-    let scuro = StickyColor(red: 0.129, green: 0.129, blue: 0.114)
+    let scuro = InkColorID.graphite.color
     let chiaro = StickyColor(red: 0.976, green: 0.973, blue: 0.960)
     for colore in NoteColorID.allCases {
         let palette = NotePalette.make(base: colore.baseColor, mode: .realistic)
@@ -465,7 +504,7 @@ do {
     }
 
     // I temi disponibili sono quindici, e ciascuno ha un nome leggibile.
-    checkEqual(PaperShape.allCases.count, 14, "quattordici temi disponibili")
+    checkEqual(PaperShape.allCases.count, 15, "quindici temi disponibili")
     check(PaperShape.allCases.allSatisfy { !$0.displayName.isEmpty }, "ogni tema ha un nome leggibile")
     checkEqual(PaperShape.soft.displayName, "Morbida", "il tema morbido conserva il suo nome")
     checkEqual(PaperShape.crumpled.displayName, "Arricciata", "il tema arricciato ha il suo nome")
@@ -576,6 +615,24 @@ do {
                           CGPoint(x: o.x, y: o.y + riga.height), CGPoint(x: o.x + riga.width, y: o.y + riga.height)]
             check(angoli.allSatisfy { contorno.contains($0) },
                   "i comandi restano dentro la carta per \(shape.rawValue) (\(Int(formato.width))×\(Int(formato.height)))")
+        }
+    }
+
+    // Puntina: la punta entra sempre nella carta, vicino all'angolo visibile,
+    // per ogni tema e a ogni misura (anche molto larga o alta).
+    for formato in [CGSize(width: 170, height: 120), CGSize(width: 260, height: 220),
+                    CGSize(width: 700, height: 220), CGSize(width: 260, height: 700),
+                    CGSize(width: 900, height: 900)] {
+        let m = StickyMetrics.make(paperSize: formato, mode: .realistic)
+        let carta = StickyGeometry.paperRect(in: CGRect(origin: .zero, size: m.windowSize(forPaperSize: formato)), metrics: m)
+        for shape in PaperShape.allCases + [.secretSheet, .secretSealed] {
+            let contorno = StickyGeometry.paperPath(in: carta, shape: shape, metrics: m)
+            let punta = StickyGeometry.pinTip(in: carta, shape: shape, metrics: m)
+            let angolo = StickyGeometry.topLeftCorner(in: carta, shape: shape, metrics: m)
+            check(contorno.contains(punta),
+                  "la puntina entra nella carta per \(shape.rawValue) (\(Int(formato.width))×\(Int(formato.height)))")
+            check(hypot(punta.x - angolo.x, punta.y - angolo.y) < 30,
+                  "la puntina resta vicina all'angolo per \(shape.rawValue) (\(Int(formato.width))×\(Int(formato.height)))")
         }
     }
 

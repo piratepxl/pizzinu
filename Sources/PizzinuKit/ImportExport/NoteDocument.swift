@@ -23,6 +23,7 @@ public struct ExportedNote: Codable, Sendable, Equatable {
     public var graphicMode: GraphicMode?
     public var paperShape: PaperShape?
     public var noteFontName: String?
+    public var inkColorID: InkColorID?
     public var isMarkdown: Bool
     /// Testo cifrato di un pizzino segreto (mai il testo in chiaro).
     public var secretPayload: String?
@@ -59,6 +60,7 @@ public struct ExportedNote: Codable, Sendable, Equatable {
         graphicMode = note.graphicMode
         paperShape = note.paperShape
         noteFontName = note.noteFontName
+        inkColorID = note.inkColorID
         isMarkdown = note.isMarkdown
         secretPayload = note.isSecret ? note.secretPayload : nil
         fontSize = note.fontSize
@@ -93,6 +95,7 @@ public struct ExportedNote: Codable, Sendable, Equatable {
              graphicMode: graphicMode,
              paperShape: paperShape,
              noteFontName: noteFontName,
+             inkColorID: inkColorID,
              isMarkdown: isMarkdown,
              isSecret: secretPayload != nil,
              secretPayload: secretPayload,

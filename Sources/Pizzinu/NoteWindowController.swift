@@ -443,6 +443,24 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         menu.addItem(colorItem)
         }
 
+        // Colore del testo: in tutti i temi (anche quelli a colore fisso).
+        if !secret {
+            let inkItem = NSMenuItem(title: L("Colore del testo"), action: nil, keyEquivalent: "")
+            let inkMenu = NSMenu()
+            let current = note.inkColorID ?? .defaultInk
+            for ink in InkColorID.allCases {
+                let title = ink == .defaultInk ? L("%@ (predefinito)", ink.displayName) : ink.displayName
+                let item = NSMenuItem(title: title, action: #selector(chooseInk(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = ink.rawValue
+                item.image = Self.inkImage(for: ink)
+                item.state = ink == current ? .on : .off
+                inkMenu.addItem(item)
+            }
+            inkItem.submenu = inkMenu
+            menu.addItem(inkItem)
+        }
+
         // Il pizzino segreto ha tema e carattere fissi: foglio antico e
         // macchina da scrivere.
         if !secret {
@@ -548,6 +566,16 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         return image
     }
 
+    private static func inkImage(for ink: InkColorID) -> NSImage {
+        let image = NSImage(size: NSSize(width: 12, height: 12), flipped: false) { rect in
+            ink.color.nsColor.setFill()
+            NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1)).fill()
+            return true
+        }
+        image.isTemplate = false
+        return image
+    }
+
     /// Menu contestuale completo ancorato a un comando della nota.
     func presentNoteMenu(from view: NSView) {
         let menu = makeContextMenu(includeEditing: false)
@@ -594,7 +622,9 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
             return
         }
         let swatches = ColorPaletteViewController(currentColorID: note.colorID,
-                                                  hasCustomColor: note.customColorHex != nil)
+                                                  hasCustomColor: note.customColorHex != nil,
+                                                  currentInk: note.inkColorID ?? .defaultInk)
+        swatches.onInk = { [weak self] ink in self?.apply(ink: ink) }
         swatches.onSelect = { [weak self] colorID in
             guard let self else { return }
             self.colorPopover?.close()
@@ -698,6 +728,22 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
     }
 
     /// Il carattere è una scelta della singola nota: `nil` torna al predefinito.
+    @objc private func chooseInk(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let ink = InkColorID(rawValue: raw) else { return }
+        apply(ink: ink)
+    }
+
+    /// La grafite è il predefinito: si salva come `nil`, così un domani il
+    /// predefinito può cambiare per tutte le note che non hanno scelto.
+    private func apply(ink: InkColorID) {
+        var updated = note
+        updated.inkColorID = ink == .defaultInk ? nil : ink
+        guard updated.inkColorID != note.inkColorID else { return }
+        note = updated
+        manager.update(note, immediate: true)
+        updatePresentation()
+    }
+
     @objc private func chooseFont(_ sender: NSMenuItem) {
         var updated = note
         updated.noteFontName = sender.representedObject as? String

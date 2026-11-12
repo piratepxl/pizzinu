@@ -88,6 +88,37 @@ enum DebugSnapshots {
         renderShowcase(in: directory.appendingPathComponent("vetrina", isDirectory: true))
         renderUpdateWindow(to: directory)
         renderPaperFinishes(in: directory.appendingPathComponent("carta", isDirectory: true))
+        renderInks(in: directory.appendingPathComponent("inchiostro", isDirectory: true))
+    }
+
+    /// Colore del testo: la stessa nota con ogni inchiostro, e il selettore
+    /// del colore con la riga degli inchiostri (chiaro e scuro).
+    static func renderInks(in directory: URL) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (index, ink) in InkColorID.allCases.enumerated() {
+            let colors: [NoteColorID] = [.lemon, .pink, .skyBlue, .orange, .pastelGreen, .purple]
+            var note = Note(content: "Chiamare Luca", colorID: colors[index], paperShape: .soft,
+                            inkColorID: ink == .defaultInk ? nil : ink)
+            note.paperSize = CGSize(width: 220, height: 180)
+            render(note: note, shape: .soft, to: directory.appendingPathComponent("\(index)-\(ink.rawValue).png"), controls: false)
+        }
+        for dark in [false, true] {
+            let controller = ColorPaletteViewController(currentColorID: .lemon, hasCustomColor: false, currentInk: .blue)
+            let view = controller.view
+            view.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+            let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: view.frame.size),
+                                  styleMask: [.borderless], backing: .buffered, defer: false)
+            window.contentView = view
+            window.orderFrontRegardless()
+            view.layoutSubtreeIfNeeded()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+            if let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+                view.cacheDisplay(in: view.bounds, to: rep)
+                try? rep.representation(using: .png, properties: [:])?
+                    .write(to: directory.appendingPathComponent(dark ? "selettore-scuro.png" : "selettore.png"))
+            }
+            window.close()
+        }
     }
 
     /// Immagini per il video promozionale (fondo trasparente, note dritte con

@@ -1,7 +1,20 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-11
 
+- **New theme: Lifelike.** A sticky note as if photographed on the wall: the adhesive strip
+  at the top, the paper lifting off and catching the light below an uneven glue line, faint
+  creases, a slightly raised bottom-left corner and a warm shadow that widens where the paper
+  comes away. Pick it from the note menu (Note Theme); new notes can get it at random.
+- **Text color.** Choose the ink of each note from the note menu (Text Color) or from the
+  color picker: Graphite, Black, Pen Blue, Red, Green, Sepia. New notes write in a soft
+  dark gray (Graphite) instead of black.
+- The pin always sits on the visible corner of the paper, on every theme and at any size.
+- The alarm-clock button is no longer clipped on tilted notes; the reminder badge uses the
+  same symbol as the buttons instead of an emoji.
+- The color dot in the note buttons now has a ring, so it stays visible on any paper.
+- **Taped** and **Clipped** themes: same soft paper and edge as the Soft theme. The tape is
+  now a glossy clear tape, the paper clip a real aluminium gem clip with all its loops.
 - Fixed the color picker sometimes showing blank white squares (and an empty
   "Custom color…" button) when the Mac is in Dark Mode.
 

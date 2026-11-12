@@ -328,3 +328,15 @@
 "Come il sistema" = "Same as system";
 "Chiaro" = "Light";
 "Scuro" = "Dark";
+
+/* Colore del testo (inchiostro) */
+"Colore del testo" = "Text Color";
+"Testo" = "Text";
+"%@ (predefinito)" = "%@ (default)";
+"Grafite" = "Graphite";
+"Nero" = "Black";
+"Blu penna" = "Pen Blue";
+"Rosso" = "Red";
+"Verde" = "Green";
+"Seppia" = "Sepia";
+"Iperrealista" = "Lifelike";

@@ -53,6 +53,7 @@ updated: 2026-11-07T10:40:00Z
 | `customColor` | `"#RRGGBB"` | Sostituisce `color`. |
 | `theme` | `soft`, `ruffled`, `crumpled`, `peeled`, `taped`, `clipped`, `round`, `tornRuled`, `ribbonBlue`, `graphPinned`, `ledgerTaped`, `spiralPad`, `clippedStack`, `liquidGlass` | Temi rimossi (anche `pinned`, «Pinnata») ripiegano su `soft`. |
 | `font` | nome PostScript | Carattere della nota. |
+| `ink` | `graphite`, `black`, `blue`, `red`, `green`, `sepia` | Colore del testo; assente = grafite (grigio scuro). |
 | `opacity` | 0,55…1 | Solo se minore di 1. |
 | `size` | `LARGHEZZAxALTEZZA` | Carta senza margini d'ombra. |
 | `position` | `X,Y` | Origine della finestra. |

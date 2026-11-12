@@ -120,6 +120,10 @@ public enum SchemaMigrator {
         Migration(version: 8, name: "caratteri liberi", statements: FontAliases.replacements.map { old, new in
             "UPDATE notes SET note_font_name = '\(new)' WHERE note_font_name = '\(old)';"
         }.sorted()),
+        // Colore del testo scelto per la nota (NULL = grafite predefinita).
+        Migration(version: 9, name: "colore del testo", statements: [
+            "ALTER TABLE notes ADD COLUMN ink_color TEXT;",
+        ]),
     ]
 
     /// Applica al database tutte le migrazioni mancanti.

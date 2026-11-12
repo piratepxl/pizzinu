@@ -63,8 +63,10 @@ stay on your Mac, and are always one click away from the menu bar.
 - **Markdown sheets.** Headings, bold, italic, strikethrough, highlight, code, quotes, lists,
   **clickable `- [ ]` tasks** and links, with a floating formatting toolbar.
 - **Checklists** nested up to three levels, with two-way completion cascade.
-- **14 paper themes**, assigned at random to new notes, including the system **Liquid Glass**
-  (macOS 26), 12 named colours plus a custom one, and per-note fonts.
+- **15 paper themes**, assigned at random to new notes, including the new **Lifelike** (a sticky
+  note photographed on the wall: adhesive strip, paper lifting off, raised corner) and the system
+  **Liquid Glass** (macOS 26), 12 named colours plus a custom one, per-note fonts and text colour
+  (soft graphite by default, or black, pen blue, red, green, sepia).
 - **Archive** as a board or a list, with search, sorting, archive and a recoverable trash.
 - **Automatic updates.** Once a day Pizzinu checks for a new version and shows what is new;
   one click downloads it, verifies its signature, replaces the app and reopens it.

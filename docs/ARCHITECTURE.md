@@ -53,7 +53,7 @@ riconciliazione dei genitori, rientro, riordino e sanificazione.
 ### Colori e geometria
 
 `NotePalette.make` deriva tutte le tonalità da un colore base; il testo sceglie sempre la variante
-a contrasto maggiore (WCAG AA verificato dal self-test). `PaperShape` elenca **14 temi**
+a contrasto maggiore (WCAG AA verificato dal self-test). `PaperShape` elenca **15 temi**
 vettoriali, `liquidGlass` compreso: la sua lastra (`LiquidGlassView`) usa `NSGlassEffectView`
 su macOS 26, senza riflessi aggiunti; perché resti trasparente anche senza fuoco, `NotePanel`
 (`keepsActiveAppearance`) dichiara sempre l'aspetto attivo — soluzione sperimentale basata su
@@ -70,7 +70,7 @@ serializzata da un lock. All'apertura `integrity_check`: un archivio illeggibile
 parte (`*.corrupt-<timestamp>.sqlite`) e ricreato. Copia di sicurezza a ogni avvio in
 `~/Library/Application Support/Pizzinu/Backups/`.
 
-### Schema (versione 7)
+### Schema (versione 9)
 
 | Versione | Migrazione |
 | --- | --- |
@@ -81,6 +81,8 @@ parte (`*.corrupt-<timestamp>.sqlite`) e ricreato. Copia di sicurezza a ogni avv
 | 7 | `is_secret`, `secret_payload`: pizzino segreto (testo cifrato) |
 | 6 | `markdown_source`: sorgente Markdown conservato mentre la nota è mostrata come testo semplice |
 | 5 | `reminder_at`, `is_markdown`, indice parziale sui promemoria; `always_on_top = 0` e `is_urgent = 0` su tutte le note (fine del primo piano predefinito e dell'urgenza) |
+| 8 | caratteri senza licenza libera sostituiti da equivalenti SIL OFL (`note_font_name`) |
+| 9 | `ink_color`: colore del testo della nota (`NULL` = grafite, il grigio scuro predefinito) |
 
 La colonna `is_urgent` resta per compatibilità ma non è più letta. Il self-test verifica la
 migrazione da un archivio v4 con dati.

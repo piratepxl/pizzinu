@@ -63,6 +63,9 @@ final class NoteContentView: NSView {
             label.font = Theme.interfaceFont(size: 10.5, weight: .medium)
             label.textColor = .secondaryLabelColor
             label.alignment = .right
+            label.usesSingleLineMode = true
+            label.lineBreakMode = .byClipping
+            label.cell?.wraps = false
             label.isHidden = true
             addSubview(label)
         }
@@ -156,9 +159,41 @@ final class NoteContentView: NSView {
             return
         }
         reminderLabel.isHidden = false
-        reminderLabel.stringValue = ringing ? "⏰ " + L("Adesso!") : "⏰ " + Self.describe(date)
-        reminderLabel.textColor = ringing ? .systemRed : palette.secondaryText.nsColor
+        let color = ringing ? NSColor.systemRed : palette.secondaryText.nsColor
+        reminderLabel.textColor = color
+        reminderLabel.attributedStringValue = Self.badgeText(symbol: ringing ? "alarm.fill" : "alarm",
+                                                              text: ringing ? L("Adesso!") : Self.describe(date),
+                                                              color: color,
+                                                              font: reminderLabel.font ?? Theme.interfaceFont(size: 10.5, weight: .medium))
         needsLayout = true
+    }
+
+    /// Simbolo e testo dell'etichetta, nello stesso colore: come i comandi in
+    /// basso, niente emoji colorate.
+    private static func badgeText(symbol: String, text: String, color: NSColor, font: NSFont) -> NSAttributedString {
+        let result = NSMutableAttributedString()
+        if let image = Theme.symbol(symbol, size: font.pointSize, weight: .semibold) {
+            let size = image.size
+            let tinted = NSImage(size: size, flipped: false) { rect in
+                image.draw(in: rect)
+                color.set()
+                rect.fill(using: .sourceAtop)
+                return true
+            }
+            let attachment = NSTextAttachment()
+            attachment.image = tinted
+            // Centrato sull'altezza delle maiuscole del testo.
+            attachment.bounds = CGRect(x: 0, y: (font.capHeight - size.height) / 2, width: size.width, height: size.height)
+            result.append(NSAttributedString(attachment: attachment))
+            result.append(NSAttributedString(string: " "))
+        }
+        result.append(NSAttributedString(string: text))
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .right
+        paragraph.lineBreakMode = .byClipping
+        result.addAttributes([.font: font, .foregroundColor: color, .paragraphStyle: paragraph],
+                             range: NSRange(location: 0, length: result.length))
+        return result
     }
 
     /// «15:30», «domani 9:00», «12 nov 9:00».
@@ -477,7 +512,7 @@ final class NoteContentView: NSView {
         var badgeX = contentRect.maxX
         var badgesShown = false
         for label in [reminderLabel, progressLabel] where !label.isHidden {
-            let width = ceil(label.intrinsicContentSize.width) + 2
+            let width = ceil(max(label.intrinsicContentSize.width, label.attributedStringValue.size().width + 4)) + 2
             label.frame = NSRect(x: badgeX - width, y: contentRect.maxY - Self.badgeHeight,
                                  width: width, height: Self.badgeHeight)
             badgeX -= width + 6
@@ -508,11 +543,12 @@ final class NoteContentView: NSView {
         bodyHost?.frame = bodyRect
 
         // Puntina: la punta entra nella carta vicino all'angolo in alto a
-        // sinistra, la testa sporge nel margine superiore. Vale per ogni tema.
+        // sinistra, la testa sporge nel margine superiore. Vale per ogni tema:
+        // il punto segue l'angolo reale della sagoma, anche ridimensionando.
         if let pinView {
             let height: CGFloat = 34
             let width = height * 0.59
-            let tip = CGPoint(x: paperRect.minX + 12, y: paperRect.maxY - 15)
+            let tip = StickyGeometry.pinTip(in: paperRect, shape: shape, metrics: metrics)
             pinView.frame = NSRect(x: tip.x - width * 0.06, y: tip.y - height * 0.03, width: width, height: height)
         }
 

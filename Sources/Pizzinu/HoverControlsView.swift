@@ -15,7 +15,7 @@ final class ChromeButton: NSButton {
     private var isHovering = false
     var hoverBackground: NSColor = NSColor.black.withAlphaComponent(0.08)
     var symbolColor: NSColor = .secondaryLabelColor {
-        didSet { contentTintColor = symbolColor }
+        didSet { contentTintColor = symbolColor; needsDisplay = true }
     }
 
     convenience init(symbol: String, accessibilityLabel: String, pointSize: CGFloat = HoverControlsView.symbolSize) {
@@ -55,13 +55,32 @@ final class ChromeButton: NSButton {
         needsDisplay = true
     }
 
+    override var image: NSImage? {
+        didSet { needsDisplay = true }
+    }
+
+    /// Il simbolo si disegna a mano, centrato e alla sua misura naturale. La
+    /// cella di `NSButton` lo ritagliava al proprio riquadro interno quando la
+    /// nota è inclinata (l'orologio, più largo degli altri, perdeva i bordi) e
+    /// lo poteva riscalare durante il ridimensionamento.
     override func draw(_ dirtyRect: NSRect) {
         if isHovering {
             let path = NSBezierPath(ovalIn: bounds.insetBy(dx: 1, dy: 1))
             hoverBackground.setFill()
             path.fill()
         }
-        super.draw(dirtyRect)
+        guard let image else { return }
+        let size = image.size
+        let frame = NSRect(x: (bounds.width - size.width) / 2, y: (bounds.height - size.height) / 2,
+                           width: size.width, height: size.height)
+        let color = isHighlighted ? symbolColor.withAlphaComponent(symbolColor.alphaComponent * 0.6) : symbolColor
+        let tinted = NSImage(size: size, flipped: false) { rect in
+            image.draw(in: rect)
+            color.set()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
+        tinted.draw(in: backingAlignedRect(frame, options: .alignAllEdgesNearest))
     }
 }
 
@@ -99,15 +118,23 @@ final class ColorDotView: NSView {
     /// Diametro del pallino: lo stesso ingombro visivo dei simboli accanto.
     static let diameter: CGFloat = 12
 
+    /// Colore dell'anello: lo stesso dei simboli accanto, così il pallino si
+    /// legge anche quando ha il colore della carta su cui sta.
+    var ringColor: NSColor = .secondaryLabelColor {
+        didSet { needsDisplay = true }
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         let d = Self.diameter
         let circle = NSRect(x: bounds.midX - d / 2, y: bounds.midY - d / 2, width: d, height: d)
-        let path = NSBezierPath(ovalIn: circle)
+        let ringWidth: CGFloat = isHovering ? 1.8 : 1.4
+        // Il tratto sta tutto dentro il diametro: ingombro uguale ai simboli.
+        let ring = NSBezierPath(ovalIn: circle.insetBy(dx: ringWidth / 2, dy: ringWidth / 2))
         color.nsColor.setFill()
-        path.fill()
-        (isHovering ? NSColor.labelColor.withAlphaComponent(0.55) : NSColor.labelColor.withAlphaComponent(0.28)).setStroke()
-        path.lineWidth = 1
-        path.stroke()
+        ring.fill()
+        ringColor.setStroke()
+        ring.lineWidth = ringWidth
+        ring.stroke()
     }
 }
 
@@ -150,6 +177,7 @@ final class HoverControlsView: NSView {
         didSet {
             guard symbolColor != oldValue else { return }
             for button in [closeButton, menuButton, lockButton] { button.symbolColor = symbolColor }
+            colorDot.ringColor = symbolColor
             applyStates()
         }
     }

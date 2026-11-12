@@ -70,7 +70,7 @@ public final class NoteStore: @unchecked Sendable {
         n.origin_x, n.origin_y, n.always_on_top, n.position_locked, n.is_visible, \
         n.is_archived, n.deleted_at, n.checklist_done, n.checklist_total, n.created_at, \
         n.updated_at, n.source_key, n.source_provider, n.source_remote_id, n.source_etag, \
-        n.source_modified_at, n.paper_shape, n.note_font_name, n.is_markdown, n.reminder_at, n.markdown_source, n.is_secret, n.secret_payload
+        n.source_modified_at, n.paper_shape, n.note_font_name, n.is_markdown, n.reminder_at, n.markdown_source, n.is_secret, n.secret_payload, n.ink_color
         """
 
     // MARK: - Apertura
@@ -188,8 +188,8 @@ public final class NoteStore: @unchecked Sendable {
                 checklist_done, checklist_total, created_at, updated_at,
                 source_key, source_provider, source_remote_id, source_etag, source_modified_at,
                 paper_shape, note_font_name, is_markdown, reminder_at, markdown_source,
-                is_secret, secret_payload
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                is_secret, secret_payload, ink_color
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (id) DO UPDATE SET
                 title = excluded.title,
                 content = excluded.content,
@@ -222,7 +222,8 @@ public final class NoteStore: @unchecked Sendable {
                 reminder_at = excluded.reminder_at,
                 markdown_source = excluded.markdown_source,
                 is_secret = excluded.is_secret,
-                secret_payload = excluded.secret_payload;
+                secret_payload = excluded.secret_payload,
+                ink_color = excluded.ink_color;
             """, Self.bindings(for: note))
     }
 
@@ -473,6 +474,7 @@ public final class NoteStore: @unchecked Sendable {
                     graphicMode: statement.optionalString(7).flatMap(GraphicMode.init(rawValue:)),
                     paperShape: statement.optionalString(27).map(PaperShape.resolving),
                     noteFontName: statement.optionalString(28),
+                    inkColorID: statement.optionalString(34).flatMap(InkColorID.init(rawValue:)),
                     isMarkdown: statement.bool(29),
                     markdownSource: statement.optionalString(31),
                     isSecret: statement.bool(32),
@@ -533,7 +535,8 @@ public final class NoteStore: @unchecked Sendable {
          .optionalReal(note.reminderAt?.timeIntervalSince1970),
          .optionalText(note.markdownSource),
          .bool(note.isSecret),
-         .optionalText(note.secretPayload)]
+         .optionalText(note.secretPayload),
+         .optionalText(note.inkColorID?.rawValue)]
     }
 
     /// Protegge i caratteri speciali di `LIKE` (`%`, `_`, `\`).

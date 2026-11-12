@@ -42,6 +42,8 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
     public var paperShape: PaperShape?
     /// Nome PostScript del carattere della nota; `nil` usa il carattere predefinito.
     public var noteFontName: String?
+    /// Colore del testo; `nil` usa l'inchiostro predefinito (grafite).
+    public var inkColorID: InkColorID?
     /// La nota è un foglio Markdown: in lettura mostra titoli, elenchi,
     /// attività spuntabili e collegamenti; in scrittura il sorgente evidenziato.
     public var isMarkdown: Bool
@@ -105,6 +107,7 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
                 graphicMode: GraphicMode? = nil,
                 paperShape: PaperShape? = nil,
                 noteFontName: String? = nil,
+                inkColorID: InkColorID? = nil,
                 isMarkdown: Bool = false,
                 markdownSource: String? = nil,
                 isSecret: Bool = false,
@@ -139,6 +142,7 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
         self.graphicMode = graphicMode
         self.paperShape = paperShape
         self.noteFontName = noteFontName
+        self.inkColorID = inkColorID
         self.isMarkdown = isMarkdown
         self.markdownSource = markdownSource
         self.isSecret = isSecret
@@ -183,7 +187,7 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
 
     /// Palette completa per il disegno.
     public func palette(globalMode: GraphicMode) -> NotePalette {
-        NotePalette.make(base: resolvedColor, mode: graphicMode ?? globalMode)
+        NotePalette.make(base: resolvedColor, mode: graphicMode ?? globalMode, ink: inkColorID?.color)
     }
 
     /// Titolo mostrato nelle liste: usa la prima riga di contenuto se il titolo è vuoto.

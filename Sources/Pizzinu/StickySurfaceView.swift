@@ -29,7 +29,8 @@ struct PaperFinish: Equatable {
 
     static func standard(for shape: PaperShape) -> PaperFinish {
         switch shape {
-        case .soft: PaperFinish(edge: .tonal)
+        // Nastrata e Graffettata sono la stessa carta della Morbida.
+        case .soft, .taped, .clipped: PaperFinish(edge: .tonal)
         default: PaperFinish()
         }
     }
@@ -75,6 +76,11 @@ final class StickySurfaceView: NSView {
         context.setShouldAntialias(true)
         context.setAllowsAntialiasing(true)
 
+        if shape == .lifelike {
+            drawHyperreal(in: context, rect: paperRect)
+            return
+        }
+
         drawThemeUnderlay(in: context, rect: paperRect)
         if shape == .liquidGlass {
             // Il riempimento della sagoma coprirebbe la sfocatura che sta
@@ -97,11 +103,11 @@ final class StickySurfaceView: NSView {
         case .peeled:
             drawPeeledVeils(in: context, path: paperPath, rect: paperRect)
         case .taped:
-            drawTapedVeils(in: context, path: paperPath, rect: paperRect)
-            drawTape(in: context, rect: paperRect)
+            drawSoftVeils(in: context, path: paperPath, rect: paperRect)
+            drawClearTape(in: context, rect: paperRect)
         case .clipped:
             drawSoftVeils(in: context, path: paperPath, rect: paperRect)
-            drawPaperclip(in: context, rect: paperRect, color: NSColor(calibratedWhite: 0.62, alpha: 1))
+            drawAluminumClip(in: context, rect: paperRect, tilted: false)
         case .round:
             drawSoftVeils(in: context, path: paperPath, rect: paperRect)
         case .tornRuled:
@@ -117,7 +123,7 @@ final class StickySurfaceView: NSView {
         case .clippedStack:
             drawSoftVeils(in: context, path: paperPath, rect: paperRect)
             drawPaperclip(in: context, rect: paperRect, color: NSColor(calibratedWhite: 0.68, alpha: 1))
-        case .liquidGlass:
+        case .liquidGlass, .lifelike:
             break
         case .secretSheet:
             drawSecretSheet(in: context, path: paperPath, rect: paperRect)
@@ -328,21 +334,6 @@ final class StickySurfaceView: NSView {
                      extend: false)
     }
 
-    private func drawTapedVeils(in context: CGContext, path: CGPath, rect: CGRect) {
-        guard metrics.mode == .realistic else { return }
-        context.saveGState()
-        defer { context.restoreGState() }
-        context.addPath(path)
-        context.clip()
-
-        let bottomBand = rect.height * StickyGeometry.softBottomVeilFraction
-        drawGradient(in: context,
-                     colors: [scaled(StickyColor.white.withAlpha(0.26)), scaled(StickyColor.white.withAlpha(0))],
-                     from: CGPoint(x: rect.midX, y: rect.minY),
-                     to: CGPoint(x: rect.midX, y: rect.minY + bottomBand),
-                     extend: false)
-    }
-
     /// Velature delle sagome piegate (pieghettata, grinzita, increspata):
     /// l'ombra che le pieghe proiettano sulla carta e la luce che la carta
     /// riprende appena sopra. Sono ritagliate sul contorno, quindi non debordano.
@@ -472,52 +463,6 @@ final class StickySurfaceView: NSView {
                      from: CGPoint(x: rect.maxX - rect.width * 0.06, y: rect.minY + rect.height * 0.10),
                      to: CGPoint(x: rect.maxX - rect.width * 0.16, y: rect.minY + rect.height * 0.03),
                      extend: false)
-    }
-
-    /// Nastro adesivo centrale, ispirato ai riferimenti fotografici: un pezzo
-    /// semitrasparente che trattiene il foglietto dall'alto.
-    private func drawTape(in context: CGContext, rect: CGRect) {
-        guard metrics.mode == .realistic else { return }
-        let tapeRect = StickyGeometry.tapeRect(in: rect)
-        let tapePath = StickyGeometry.tapePath(in: rect)
-
-        context.saveGState()
-        context.addPath(tapePath)
-        context.setFillColor(NSColor(calibratedRed: 0.94, green: 0.89, blue: 0.76, alpha: 0.80).cgColor)
-        context.fillPath()
-        context.restoreGState()
-
-        context.saveGState()
-        context.addPath(tapePath)
-        context.clip()
-        let shadowBand = tapeRect.height * StickyGeometry.tapeShadowFraction
-        drawGradient(in: context,
-                     colors: [NSColor.black.withAlphaComponent(0.09), NSColor.clear],
-                     from: CGPoint(x: tapeRect.midX, y: tapeRect.minY),
-                     to: CGPoint(x: tapeRect.midX, y: tapeRect.minY + shadowBand),
-                     extend: false)
-        let highlightBand = tapeRect.height * StickyGeometry.tapeHighlightFraction
-        drawGradient(in: context,
-                     colors: [NSColor.white.withAlphaComponent(0.22), NSColor.clear],
-                     from: CGPoint(x: tapeRect.midX, y: tapeRect.maxY),
-                     to: CGPoint(x: tapeRect.midX, y: tapeRect.maxY - highlightBand),
-                     extend: false)
-
-        // Una piega centrale e un bordo meno uniforme rendono il nastro piu'
-        // credibile, vicino a quello cartaceo dei riferimenti.
-        drawGradient(in: context,
-                     colors: [NSColor.white.withAlphaComponent(0.11), NSColor.clear, NSColor.black.withAlphaComponent(0.06)],
-                     from: CGPoint(x: tapeRect.minX + tapeRect.width * 0.42, y: tapeRect.maxY),
-                     to: CGPoint(x: tapeRect.minX + tapeRect.width * 0.58, y: tapeRect.minY),
-                     extend: false)
-        context.restoreGState()
-
-        context.saveGState()
-        context.addPath(tapePath)
-        context.setStrokeColor(NSColor(calibratedRed: 0.77, green: 0.72, blue: 0.58, alpha: 0.42).cgColor)
-        context.setLineWidth(max(0.65, tapeRect.height * 0.035))
-        context.strokePath()
-        context.restoreGState()
     }
 
     private func drawThemeUnderlay(in context: CGContext, rect: CGRect) {
@@ -1016,5 +961,449 @@ private struct SeededRandom {
     mutating func next() -> Double {
         state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
         return Double(state >> 11) / Double(1 << 53)
+    }
+}
+
+// MARK: - Nastro trasparente, graffetta in alluminio, tema Iperrealista
+
+extension StickySurfaceView {
+    /// Contorno con le estremità strappate a dentini irregolari, nel sistema
+    /// di riferimento del nastro (origine al centro, asse x lungo il nastro).
+    private func tornBandPath(length: CGFloat, thickness: CGFloat, seed: UInt64, tooth: CGFloat = 1.6) -> CGPath {
+        var random = SeededRandom(seed: seed)
+        let half = length / 2, top = thickness / 2
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: -half, y: top))
+        path.addLine(to: CGPoint(x: half, y: top))
+        var y = top
+        var out = true
+        while y > -top {
+            y -= 1.2 + random.next() * 1.4
+            out.toggle()
+            path.addLine(to: CGPoint(x: half + (out ? 0 : -tooth * (0.5 + random.next())), y: max(-top, y)))
+        }
+        path.addLine(to: CGPoint(x: -half, y: -top))
+        y = -top
+        while y < top {
+            y += 1.2 + random.next() * 1.4
+            out.toggle()
+            path.addLine(to: CGPoint(x: -half + (out ? 0 : tooth * (0.5 + random.next())), y: min(top, y)))
+        }
+        path.closeSubpath()
+        return path
+    }
+
+    /// Nastro trasparente lucido (scelto dall'utente il 12 nov 2026), a
+    /// cavallo del bordo superiore e appena storto: quasi invisibile, lo
+    /// tradiscono i riflessi, i bordi chiari, una piccola grinza e le
+    /// estremità tagliate a dentini.
+    func drawClearTape(in context: CGContext, rect: CGRect) {
+        guard metrics.mode == .realistic else { return }
+        let length = min(rect.width * 0.36, 118)
+        let thickness = min(max(18, rect.height * 0.11), 25)
+        let center = CGPoint(x: rect.midX + rect.width * 0.02, y: rect.maxY + thickness * 0.06)
+        let band = tornBandPath(length: length, thickness: thickness, seed: 41, tooth: 0.8)
+        let half = length / 2, top = thickness / 2
+
+        context.saveGState()
+        defer { context.restoreGState() }
+        context.translateBy(x: center.x, y: center.y)
+        context.rotate(by: -0.045)
+
+        // Nastro trasparente lucido: quasi invisibile, lo tradiscono i
+        // riflessi, i bordi chiari e una piccola grinza.
+        context.saveGState()
+        context.setShadow(offset: CGSize(width: 0, height: -0.5), blur: 1, color: NSColor.black.withAlphaComponent(0.10).cgColor)
+        context.addPath(band)
+        context.setFillColor(NSColor.white.withAlphaComponent(0.16).cgColor)
+        context.fillPath()
+        context.restoreGState()
+        context.saveGState()
+        context.addPath(band)
+        context.clip()
+        context.saveGState()
+        context.setBlendMode(.screen)
+        drawGradient(in: context,
+                     colors: [NSColor.white.withAlphaComponent(0.05), NSColor.white.withAlphaComponent(0.42),
+                              NSColor.white.withAlphaComponent(0.06), NSColor.white.withAlphaComponent(0.04),
+                              NSColor.white.withAlphaComponent(0.26), NSColor.white.withAlphaComponent(0.05)],
+                     from: CGPoint(x: -half, y: top), to: CGPoint(x: half, y: -top), extend: false)
+        context.restoreGState()
+        for edge in [top - 0.5, -top + 0.5] {
+            context.move(to: CGPoint(x: -half, y: edge))
+            context.addLine(to: CGPoint(x: half, y: edge))
+        }
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.75).cgColor)
+        context.setLineWidth(0.8)
+        context.strokePath()
+        for edge in [top - 1.4, -top + 1.4] {
+            context.move(to: CGPoint(x: -half, y: edge))
+            context.addLine(to: CGPoint(x: half, y: edge))
+        }
+        context.setStrokeColor(NSColor.black.withAlphaComponent(0.07).cgColor)
+        context.setLineWidth(0.5)
+        context.strokePath()
+        // Grinza vicino all'estremità destra.
+        let wx = half * 0.62
+        context.move(to: CGPoint(x: wx, y: top))
+        context.addCurve(to: CGPoint(x: wx - 3, y: -top), control1: CGPoint(x: wx + 2.5, y: top * 0.3), control2: CGPoint(x: wx - 4, y: -top * 0.2))
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.55).cgColor)
+        context.setLineWidth(0.9)
+        context.strokePath()
+        context.move(to: CGPoint(x: wx + 1, y: top))
+        context.addCurve(to: CGPoint(x: wx - 2, y: -top), control1: CGPoint(x: wx + 3.5, y: top * 0.3), control2: CGPoint(x: wx - 3, y: -top * 0.2))
+        context.setStrokeColor(NSColor.black.withAlphaComponent(0.08).cgColor)
+        context.setLineWidth(0.6)
+        context.strokePath()
+        context.restoreGState()
+        context.addPath(band)
+        context.setStrokeColor(NSColor.black.withAlphaComponent(0.10).cgColor)
+        context.setLineWidth(0.4)
+        context.strokePath()
+    }
+
+    /// Graffetta in alluminio, come quelle vere: un filo solo con tre pieghe.
+    /// Dall'estremità interna scende, gira in basso (giro interno), risale,
+    /// scavalca il bordo della carta con la piega in alto, scende lungo il
+    /// lato esterno, gira in basso (giro esterno) e risale fino all'altra
+    /// estremità.
+    static func gemClipPath(width w: CGFloat, height h: CGFloat, apex: CGPoint) -> CGPath {
+        let left = apex.x - w / 2
+        func x(_ f: CGFloat) -> CGFloat { left + f * w }
+        let rTop = w * 0.40, rOuter = w * 0.50, rInner = w * 0.29
+        let topCenter = CGPoint(x: x(0.40), y: apex.y - rTop)
+        let outerCenter = CGPoint(x: x(0.50), y: apex.y - h + rOuter)
+        let innerCenter = CGPoint(x: x(0.51), y: apex.y - h * 0.86 + rInner)
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: x(0.22), y: apex.y - h * 0.30))
+        path.addLine(to: CGPoint(x: x(0.22), y: innerCenter.y))
+        path.addArc(center: innerCenter, radius: rInner, startAngle: .pi, endAngle: 2 * .pi, clockwise: false)
+        path.addLine(to: CGPoint(x: x(0.80), y: topCenter.y))
+        path.addArc(center: topCenter, radius: rTop, startAngle: 0, endAngle: .pi, clockwise: false)
+        path.addLine(to: CGPoint(x: x(0), y: outerCenter.y))
+        path.addArc(center: outerCenter, radius: rOuter, startAngle: .pi, endAngle: 2 * .pi, clockwise: false)
+        path.addLine(to: CGPoint(x: x(1), y: apex.y - h * 0.20))
+        return path
+    }
+
+    func drawAluminumClip(in context: CGContext, rect: CGRect, tilted: Bool) {
+        let width = min(rect.width * 0.085, 20)
+        let height = width * 3.2
+        let apex = CGPoint(x: tilted ? rect.minX + rect.width * 0.62 : rect.midX, y: rect.maxY + 7)
+        let wire = max(1.7, width * 0.10)
+        var path = Self.gemClipPath(width: width, height: height, apex: apex)
+        if tilted {
+            var turn = CGAffineTransform(translationX: apex.x, y: apex.y).rotated(by: -0.14).translatedBy(x: -apex.x, y: -apex.y)
+            path = path.copy(using: &turn) ?? path
+        }
+        context.saveGState()
+        defer { context.restoreGState() }
+        context.setLineCap(.round)
+        context.setLineJoin(.round)
+        // Ombra portata sulla carta: corta, il filo è appoggiato.
+        context.saveGState()
+        context.setShadow(offset: CGSize(width: 1.0, height: -1.6), blur: 1.8,
+                          color: NSColor.black.withAlphaComponent(0.30).cgColor)
+        context.addPath(path)
+        context.setStrokeColor(NSColor(calibratedRed: 0.50, green: 0.52, blue: 0.55, alpha: 1).cgColor)
+        context.setLineWidth(wire)
+        context.strokePath()
+        context.restoreGState()
+        // Alluminio: satinato, chiaro, poco contrasto; luce dall'alto a sinistra.
+        context.addPath(path)
+        context.setStrokeColor(NSColor(calibratedRed: 0.80, green: 0.81, blue: 0.83, alpha: 1).cgColor)
+        context.setLineWidth(wire * 0.70)
+        context.strokePath()
+        var shine = CGAffineTransform(translationX: -wire * 0.17, y: wire * 0.17)
+        context.addPath(path.copy(using: &shine) ?? path)
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.75).cgColor)
+        context.setLineWidth(wire * 0.28)
+        context.strokePath()
+        var dark = CGAffineTransform(translationX: wire * 0.22, y: -wire * 0.22)
+        context.addPath(path.copy(using: &dark) ?? path)
+        context.setStrokeColor(NSColor(calibratedRed: 0.42, green: 0.44, blue: 0.47, alpha: 0.45).cgColor)
+        context.setLineWidth(wire * 0.18)
+        context.strokePath()
+    }
+
+    // MARK: Tema Iperrealista
+
+    /// Foglietto attaccato al muro, dalla foto di riferimento: la striscia
+    /// adesiva in alto aderisce ed è più satura, sotto la carta si stacca e
+    /// prende luce verso il basso, l'ombra si allarga dove il foglio è
+    /// sollevato e prende il colore della carta.
+    static func hyperrealCornerSize(in rect: CGRect) -> CGFloat {
+        StickyGeometry.lifelikeCornerSize(in: rect)
+    }
+
+    /// Piega dell'angolo sollevato: dal bordo inferiore al bordo sinistro,
+    /// appena incurvata verso l'interno.
+    static func hyperrealCornerFold(in rect: CGRect) -> CGPath {
+        let c = hyperrealCornerSize(in: rect)
+        let fold = CGMutablePath()
+        fold.move(to: CGPoint(x: rect.minX + c * 1.35, y: rect.minY - 1))
+        fold.addQuadCurve(to: CGPoint(x: rect.minX - 1, y: rect.minY + c * 1.50),
+                          control: CGPoint(x: rect.minX + c * 0.80, y: rect.minY + c * 0.85))
+        return fold
+    }
+
+    static func hyperrealPath(in rect: CGRect) -> CGPath {
+        StickyGeometry.lifelikePaperPath(in: rect)
+    }
+
+    func drawHyperreal(in context: CGContext, rect: CGRect) {
+        let path = Self.hyperrealPath(in: rect)
+        let base = palette.base
+        let stripBottom = rect.maxY - min(rect.height * 0.20, 46)
+
+        // 1. Ombra: corta dove la striscia aderisce, ampia e calda dove il
+        //    foglio si stacca dal muro.
+        if showsShadow {
+            let lifted = CGMutablePath()
+            lifted.move(to: CGPoint(x: rect.minX + 6, y: stripBottom))
+            lifted.addLine(to: CGPoint(x: rect.maxX - 6, y: stripBottom))
+            lifted.addLine(to: CGPoint(x: rect.maxX - 6, y: rect.minY + rect.height * 0.09))
+            lifted.addLine(to: CGPoint(x: rect.minX + 6, y: rect.minY + rect.height * 0.07))
+            lifted.closeSubpath()
+            context.saveGState()
+            let tint = base.adjustingBrightness(by: -0.55).adjustingSaturation(by: 0.25).withAlpha(0.62)
+            context.setShadow(offset: CGSize(width: 1.5, height: -9), blur: 11, color: scaled(tint).cgColor)
+            context.addPath(lifted)
+            context.setFillColor(scaled(base).cgColor)
+            context.fillPath()
+            context.restoreGState()
+            // L'angolo sollevato getta un'ombra propria, un po' più in là.
+            let corner = Self.hyperrealCornerSize(in: rect)
+            drawSoftBlob(in: context, center: CGPoint(x: rect.minX + corner * 0.60, y: rect.minY - 1.5),
+                         radius: corner * 1.9, squash: 0.42, angle: 0.25,
+                         color: scaled(tint.withAlpha(0.30)))
+            context.saveGState()
+            context.setShadow(offset: CGSize(width: 0, height: -0.6), blur: 1.6, color: NSColor.black.withAlphaComponent(0.24).cgColor)
+            context.addPath(path)
+            context.setFillColor(scaled(base).cgColor)
+            context.fillPath()
+            context.restoreGState()
+        }
+
+        context.saveGState()
+        context.addPath(path)
+        context.clip()
+
+        // 2. Corpo: si incurva (un filo più scuro) e poi prende luce in basso.
+        drawGradient(in: context,
+                     colors: [scaled(base.adjustingBrightness(by: -0.015)), scaled(base.adjustingBrightness(by: -0.045)),
+                              scaled(base.adjustingBrightness(by: 0.02)), scaled(base.adjustingBrightness(by: 0.07).adjustingSaturation(by: -0.06))],
+                     from: CGPoint(x: rect.midX, y: stripBottom), to: CGPoint(x: rect.midX, y: rect.minY))
+        if let light = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                                  colors: [NSColor.white.withAlphaComponent(0.20).cgColor, NSColor.white.withAlphaComponent(0).cgColor] as CFArray,
+                                  locations: [0, 1]) {
+            context.drawRadialGradient(light, startCenter: CGPoint(x: rect.maxX - rect.width * 0.18, y: rect.minY + rect.height * 0.12),
+                                       startRadius: 0, endCenter: CGPoint(x: rect.maxX - rect.width * 0.18, y: rect.minY + rect.height * 0.12),
+                                       endRadius: max(rect.width, rect.height) * 0.55, options: [])
+        }
+
+        // 3. Striscia adesiva: aderisce al muro, più satura e più scura. Il
+        //    confine (dove finisce la colla e la carta si stacca) non è mai
+        //    dritto: scende verso destra, ha un piccolo scalino e trema.
+        let boundary = Self.hyperrealFoldLine(in: rect, stripBottom: stripBottom)
+        let strip = boundary.mutableCopy() ?? CGMutablePath()
+        strip.addLine(to: CGPoint(x: rect.maxX + 2, y: rect.maxY + 2))
+        strip.addLine(to: CGPoint(x: rect.minX - 2, y: rect.maxY + 2))
+        strip.closeSubpath()
+        let stripColor = scaled(base.adjustingBrightness(by: -0.05).adjustingSaturation(by: 0.08))
+        context.saveGState()
+        // L'ombra dello stesso colore sfuma il confine verso il basso.
+        context.setShadow(offset: CGSize(width: 0, height: -1.6), blur: 3.2, color: stripColor.withAlphaComponent(0.9).cgColor)
+        context.addPath(strip)
+        context.setFillColor(stripColor.cgColor)
+        context.fillPath()
+        context.restoreGState()
+        // Macchie della colla: la striscia non è uniforme.
+        context.saveGState()
+        context.addPath(strip)
+        context.clip()
+        var glue = SeededRandom(seed: 0x6C0E)
+        for _ in 0..<6 {
+            let center = CGPoint(x: rect.minX + glue.next() * rect.width, y: stripBottom + glue.next() * (rect.maxY - stripBottom))
+            let darker = glue.next() > 0.45
+            drawSoftBlob(in: context, center: center, radius: rect.width * (0.10 + glue.next() * 0.12), squash: 0.35, angle: (glue.next() - 0.5) * 0.4,
+                         color: darker ? scaled(base.adjustingBrightness(by: -0.18).withAlpha(0.10)) : NSColor.white.withAlphaComponent(0.07))
+        }
+        context.restoreGState()
+        // Dove la carta si stacca: un filo d'ombra irregolare, poi la luce.
+        context.saveGState()
+        context.setShadow(offset: CGSize(width: 0, height: -0.8), blur: 1.6,
+                          color: scaled(base.adjustingBrightness(by: -0.35).withAlpha(0.18)).cgColor)
+        context.addPath(boundary)
+        context.setStrokeColor(scaled(base.adjustingBrightness(by: -0.25).withAlpha(0.10)).cgColor)
+        context.setLineWidth(0.8)
+        context.strokePath()
+        context.restoreGState()
+        // La luce comincia proprio sotto il confine, seguendone le onde.
+        context.saveGState()
+        let below = CGMutablePath()
+        below.addRect(rect.insetBy(dx: -4, dy: -4))
+        below.addPath(strip)
+        context.addPath(below)
+        context.clip(using: .evenOdd)
+        drawGradient(in: context, colors: [NSColor.white.withAlphaComponent(0.13), NSColor.clear],
+                     from: CGPoint(x: rect.midX, y: stripBottom + 5), to: CGPoint(x: rect.midX, y: stripBottom - rect.height * 0.18), extend: false)
+        context.restoreGState()
+
+        // 3b. Micro piegature: la carta staccata non è mai liscia. Macchie
+        //     di luce e d'ombra allungate in diagonale e qualche grinza
+        //     sottile, sfumata, che parte dal confine della colla.
+        var crease = SeededRandom(seed: 0xC2EA5E)
+        for index in 0..<9 {
+            let center = CGPoint(x: rect.minX + (0.08 + crease.next() * 0.84) * rect.width,
+                                 y: rect.minY + (0.10 + crease.next() * 0.62) * rect.height)
+            let light = index % 2 == 0
+            drawSoftBlob(in: context, center: center, radius: rect.width * (0.09 + crease.next() * 0.10), squash: 0.28,
+                         angle: -0.35 + (crease.next() - 0.5) * 0.5,
+                         color: light ? NSColor.white.withAlphaComponent(0.09)
+                                      : scaled(base.adjustingBrightness(by: -0.20).withAlpha(0.07)))
+        }
+        context.setLineCap(.round)
+        for _ in 0..<5 {
+            let startX = rect.minX + (0.10 + crease.next() * 0.80) * rect.width
+            let start = CGPoint(x: startX, y: stripBottom - 2 - crease.next() * rect.height * 0.04)
+            let length = rect.height * (0.07 + crease.next() * 0.12)
+            let angle = -.pi / 2 + (crease.next() - 0.5) * 1.1
+            let end = CGPoint(x: start.x + cos(angle) * length, y: start.y + sin(angle) * length)
+            let bend = (crease.next() - 0.5) * length * 0.35
+            let control = CGPoint(x: (start.x + end.x) / 2 + bend, y: (start.y + end.y) / 2)
+            for (offset, color, width) in [(CGFloat(0), scaled(base.adjustingBrightness(by: -0.30).withAlpha(0.06)), CGFloat(2.4)),
+                                           (CGFloat(1.6), NSColor.white.withAlphaComponent(0.09), CGFloat(1.8))] {
+                context.saveGState()
+                context.setShadow(offset: .zero, blur: 2.8, color: color.cgColor)
+                context.move(to: CGPoint(x: start.x - offset, y: start.y + offset * 0.3))
+                context.addQuadCurve(to: CGPoint(x: end.x - offset, y: end.y + offset * 0.3),
+                                     control: CGPoint(x: control.x - offset, y: control.y + offset * 0.3))
+                context.setStrokeColor(color.cgColor)
+                context.setLineWidth(width)
+                context.strokePath()
+                context.restoreGState()
+            }
+        }
+        // Il bordo sinistro si incurva: una banda d'ombra morbida.
+        drawGradient(in: context, colors: [scaled(base.adjustingBrightness(by: -0.22).withAlpha(0.10)), NSColor.clear],
+                     from: CGPoint(x: rect.minX, y: rect.midY), to: CGPoint(x: rect.minX + rect.width * 0.10, y: rect.midY), extend: false)
+
+        // 4. Angolo in basso a sinistra sollevato: oltre la piega la carta
+        //    si alza verso la luce (più chiara verso la punta); lungo la
+        //    piega un filo di luce dalla parte del lembo e un'ombra morbida
+        //    dalla parte del foglio.
+        let fold = Self.hyperrealCornerFold(in: rect)
+        let corner = Self.hyperrealCornerSize(in: rect)
+        let flap = fold.mutableCopy() ?? CGMutablePath()
+        flap.addLine(to: CGPoint(x: rect.minX - 4, y: rect.minY - 4))
+        flap.closeSubpath()
+        context.saveGState()
+        context.addPath(flap)
+        context.clip()
+        drawGradient(in: context,
+                     colors: [scaled(base.adjustingBrightness(by: -0.015)), scaled(base.adjustingBrightness(by: 0.05).adjustingSaturation(by: -0.07))],
+                     from: CGPoint(x: rect.minX + corner * 0.62, y: rect.minY + corner * 0.70),
+                     to: CGPoint(x: rect.minX + corner * 0.10, y: rect.minY + corner * 0.10))
+        context.restoreGState()
+        // Lungo la piega nessun filo disegnato: dalla parte del foglio
+        // un'ombra che sfuma verso l'interno, dalla parte del lembo una luce
+        // che sfuma verso la punta.
+        let foldMid = CGPoint(x: rect.minX + corner * 0.62, y: rect.minY + corner * 0.70)
+        let inward = CGPoint(x: 0.7071, y: 0.7071)
+        let sheet = CGMutablePath()
+        sheet.addRect(rect.insetBy(dx: -4, dy: -4))
+        sheet.addPath(flap)
+        context.saveGState()
+        context.addPath(sheet)
+        context.clip(using: .evenOdd)
+        drawGradient(in: context,
+                     colors: [scaled(base.adjustingBrightness(by: -0.30).withAlpha(0.03)),
+                              scaled(base.adjustingBrightness(by: -0.30).withAlpha(0.07)),
+                              scaled(base.adjustingBrightness(by: -0.30).withAlpha(0.03)),
+                              scaled(base.adjustingBrightness(by: -0.30).withAlpha(0))],
+                     from: CGPoint(x: foldMid.x - inward.x, y: foldMid.y - inward.y),
+                     to: CGPoint(x: foldMid.x + inward.x * corner * 0.45, y: foldMid.y + inward.y * corner * 0.45),
+                     extend: false)
+        context.restoreGState()
+        context.saveGState()
+        context.addPath(flap)
+        context.clip()
+        drawGradient(in: context,
+                     colors: [NSColor.white.withAlphaComponent(0.02), NSColor.white.withAlphaComponent(0.10), NSColor.white.withAlphaComponent(0)],
+                     from: CGPoint(x: foldMid.x + inward.x, y: foldMid.y + inward.y),
+                     to: CGPoint(x: foldMid.x - inward.x * corner * 0.35, y: foldMid.y - inward.y * corner * 0.35),
+                     extend: false)
+        context.restoreGState()
+
+        // 5. Grana leggera della carta.
+        context.restoreGState()
+        drawPaperGrain(in: context, path: path, rect: rect, grain: .subtle)
+
+        // 6. Il taglio in alto e il bordo in basso, sollevato, prendono luce.
+        context.saveGState()
+        context.move(to: CGPoint(x: rect.minX + 0.5, y: rect.maxY - 0.5))
+        context.addLine(to: CGPoint(x: rect.maxX - 0.5, y: rect.maxY - 0.5 - rect.height * 0.004))
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.55).cgColor)
+        context.setLineWidth(0.8)
+        context.strokePath()
+        context.addPath(path)
+        context.setStrokeColor(scaled(base.adjustingBrightness(by: -0.10).withAlpha(0.22)).cgColor)
+        context.setLineWidth(0.5)
+        context.strokePath()
+        context.restoreGState()
+    }
+}
+
+extension StickySurfaceView {
+    /// Confine della colla del tema iperrealistico: in frazioni della carta,
+    /// con un seme fisso, così resta uguale a ogni ridisegno e si allunga
+    /// insieme alla nota senza cambiare carattere.
+    static func hyperrealFoldLine(in rect: CGRect, stripBottom: CGFloat) -> CGPath {
+        var random = SeededRandom(seed: 0xF01D)
+        let count = 16
+        var points: [CGPoint] = []
+        for index in 0...count {
+            let f = CGFloat(index) / CGFloat(count)
+            // Scende verso destra; scalino verso metà; tremolio fine.
+            var dy = 3.5 - f * 8.5
+            if f > 0.50 { dy -= 2.6 }
+            if f > 0.50 && f < 0.57 { dy += 1.4 }
+            dy += 1.6 * sin(f * .pi * 3.3 + 0.8) + (random.next() - 0.5) * 2.4
+            points.append(CGPoint(x: rect.minX - 2 + f * (rect.width + 4), y: stripBottom + dy))
+        }
+        // Curva morbida che passa per tutti i punti (Catmull-Rom).
+        let path = CGMutablePath()
+        path.move(to: points[0])
+        for index in 0..<(points.count - 1) {
+            let p0 = points[max(0, index - 1)], p1 = points[index]
+            let p2 = points[index + 1], p3 = points[min(points.count - 1, index + 2)]
+            let c1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6)
+            let c2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6)
+            path.addCurve(to: p2, control1: c1, control2: c2)
+        }
+        return path
+    }
+
+    /// Macchia morbida ellittica (luce o ombra), sfumata a zero sul bordo.
+    func drawSoftBlob(in context: CGContext, center: CGPoint, radius: CGFloat, squash: CGFloat, angle: CGFloat, color: NSColor) {
+        // Caduta gaussiana in molti passi: niente anelli visibili.
+        let alpha = color.alphaComponent
+        let steps = 12
+        var colors: [CGColor] = []
+        var locations: [CGFloat] = []
+        for index in 0...steps {
+            let t = CGFloat(index) / CGFloat(steps)
+            locations.append(t)
+            colors.append(color.withAlphaComponent(alpha * exp(-4.2 * t * t) * (1 - t)).cgColor)
+        }
+        guard let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                                        colors: colors as CFArray, locations: locations) else { return }
+        context.saveGState()
+        context.translateBy(x: center.x, y: center.y)
+        context.rotate(by: angle)
+        context.scaleBy(x: 1, y: squash)
+        context.drawRadialGradient(gradient, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: radius, options: [])
+        context.restoreGState()
     }
 }

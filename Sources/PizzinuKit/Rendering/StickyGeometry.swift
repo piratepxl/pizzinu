@@ -149,6 +149,9 @@ public enum StickyGeometry {
         case .clippedStack:
             return LayoutInsets(top: rect.height * 0.090, left: rect.width * 0.075,
                                 bottom: rect.height * 0.050, right: rect.width * 0.065)
+        case .lifelike:
+            return LayoutInsets(top: rect.height * 0.040, left: 4,
+                                bottom: rect.height * 0.030, right: 4)
         case .secretSheet:
             // Dentro la cornice e sopra lo strappo.
             return LayoutInsets(top: rect.height * 0.04, left: rect.width * 0.04,
@@ -198,6 +201,8 @@ public enum StickyGeometry {
             return CGPoint(x: paperRect.maxX - 8, y: paperRect.minY + 12)
         case .clippedStack:
             return CGPoint(x: paperRect.maxX - 10, y: paperRect.minY + 13)
+        case .lifelike:
+            return CGPoint(x: paperRect.maxX - 9, y: paperRect.minY + max(12, 0.05 * paperRect.height + 7))
         case .secretSheet:
             return CGPoint(x: paperRect.maxX - 12, y: paperRect.minY + paperRect.height * secretTearFraction + 10)
         case .secretSealed:
@@ -247,6 +252,55 @@ public enum StickyGeometry {
         return start
     }
 
+    /// Distanza della punta della puntina dall'angolo visibile della carta.
+    public static let pinTipOffset = CGSize(width: 8, height: 10)
+
+    /// Angolo in alto a sinistra così come appare: il primo punto della carta
+    /// che si incontra scendendo in diagonale dall'angolo del rettangolo.
+    /// Segue la sagoma (vertici rientrati, bordo strappato, cerchio…) a ogni
+    /// misura.
+    public static func topLeftCorner(in paperRect: CGRect,
+                                     shape: PaperShape,
+                                     metrics: StickyMetrics) -> CGPoint {
+        // Il pizzino sigillato è un quadrato al centro della carta.
+        if shape == .secretSealed {
+            let packet = secretPacketRect(in: paperRect)
+            return CGPoint(x: packet.minX, y: packet.maxY)
+        }
+        let path = paperPath(in: paperRect, shape: shape, metrics: metrics)
+        let limit = min(paperRect.width, paperRect.height) / 2
+        var step: CGFloat = 0
+        while step < limit {
+            let point = CGPoint(x: paperRect.minX + step, y: paperRect.maxY - step)
+            if path.contains(point) { return point }
+            step += 0.5
+        }
+        return CGPoint(x: paperRect.minX, y: paperRect.maxY)
+    }
+
+    /// Punto in cui la punta della puntina entra nella carta: a distanza fissa
+    /// dall'angolo visibile, poi spostato in diagonale verso l'interno finché
+    /// sta dentro la sagoma con qualche punto di margine.
+    public static func pinTip(in paperRect: CGRect,
+                              shape: PaperShape,
+                              metrics: StickyMetrics) -> CGPoint {
+        let path = paperPath(in: paperRect, shape: shape, metrics: metrics)
+        let corner = topLeftCorner(in: paperRect, shape: shape, metrics: metrics)
+        var tip = CGPoint(x: corner.x + pinTipOffset.width, y: corner.y - pinTipOffset.height)
+        let margin: CGFloat = 3
+        func fits(_ p: CGPoint) -> Bool {
+            [CGPoint(x: p.x - margin, y: p.y), CGPoint(x: p.x + margin, y: p.y),
+             CGPoint(x: p.x, y: p.y - margin), CGPoint(x: p.x, y: p.y + margin)].allSatisfy { path.contains($0) }
+        }
+        var guardSteps = 0
+        while !fits(tip) && guardSteps < 80 {
+            tip.x += 0.5
+            tip.y -= 0.5
+            guardSteps += 1
+        }
+        return tip
+    }
+
     /// Contorno della carta per la sagoma scelta.
     public static func paperPath(in paperRect: CGRect,
                                  shape: PaperShape,
@@ -265,6 +319,7 @@ public enum StickyGeometry {
         case .ledgerTaped: return ledgerTapedPaperPath(in: paperRect)
         case .spiralPad: return spiralPadPaperPath(in: paperRect)
         case .clippedStack: return clippedStackPaperPath(in: paperRect)
+        case .lifelike: return lifelikePaperPath(in: paperRect)
         case .liquidGlass: return liquidGlassPaperPath(in: paperRect)
         case .secretSheet: return secretSheetPath(in: paperRect)
         case .secretSealed: return secretSealedPath(in: paperRect)
@@ -556,6 +611,35 @@ public enum StickyGeometry {
         path.addCurve(to: point(0.0211, 0.9802),
                       control1: point(0.0106, 0.3243),
                       control2: point(0.0148, 0.6708))
+        path.closeSubpath()
+        return path
+    }
+
+    /// Lato dell'angolo sollevato della sagoma iperrealistica, in punti:
+    /// uguale a ogni misura della nota.
+    public static func lifelikeCornerSize(in rect: CGRect) -> CGFloat {
+        min(26, max(14, min(rect.width, rect.height) * 0.11))
+    }
+
+    /// Sagoma iperrealistica: bordo superiore dritto (la striscia adesiva
+    /// aderisce), bordo inferiore appena ondulato e sollevato, angolo in basso
+    /// a sinistra arrotondato e rientrato perché si alza un poco.
+    public static func lifelikePaperPath(in rect: CGRect) -> CGPath {
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + x * rect.width, y: rect.minY + y * rect.height)
+        }
+        let c = lifelikeCornerSize(in: rect)
+        let path = CGMutablePath()
+        path.move(to: point(0.000, 1.000))
+        path.addLine(to: point(1.000, 0.996))
+        path.addCurve(to: point(0.994, 0.050), control1: point(1.002, 0.66), control2: point(0.998, 0.30))
+        path.addCurve(to: CGPoint(x: rect.minX + c, y: rect.minY + 0.4),
+                      control1: point(0.72, 0.012), control2: point(0.36, 0.030))
+        path.addQuadCurve(to: CGPoint(x: rect.minX + c * 0.10, y: rect.minY + c * 0.16),
+                          control: CGPoint(x: rect.minX + c * 0.42, y: rect.minY - 0.6))
+        path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.minY + c * 1.05),
+                          control: CGPoint(x: rect.minX - 0.4, y: rect.minY + c * 0.50))
+        path.addCurve(to: point(0.000, 1.000), control1: point(0.004, 0.40), control2: point(-0.002, 0.75))
         path.closeSubpath()
         return path
     }

@@ -43,6 +43,9 @@ public enum PaperShape: String, Codable, CaseIterable, Sendable {
     case spiralPad
     /// Biglietto doppio con graffetta.
     case clippedStack
+    /// Foglietto iperrealistico attaccato al muro: striscia adesiva in alto,
+    /// carta che si stacca e prende luce verso il basso, angolo sollevato.
+    case lifelike
     /// Vetro quadrato traslucido: angoli continui e superficie che lascia
     /// vedere ciò che sta dietro, come una lastra di vetro appoggiata.
     case liquidGlass
@@ -56,7 +59,7 @@ public enum PaperShape: String, Codable, CaseIterable, Sendable {
     /// i due del pizzino segreto ne sono esclusi.
     public static var allCases: [PaperShape] {
         [.soft, .ruffled, .crumpled, .peeled, .taped, .clipped, .round, .tornRuled,
-         .ribbonBlue, .graphPinned, .ledgerTaped, .spiralPad, .clippedStack, .liquidGlass]
+         .ribbonBlue, .graphPinned, .ledgerTaped, .spiralPad, .clippedStack, .lifelike, .liquidGlass]
     }
 
     public var displayName: String {
@@ -74,6 +77,7 @@ public enum PaperShape: String, Codable, CaseIterable, Sendable {
         case .ledgerTaped: L("Blocco Lungo")
         case .spiralPad: L("Spiralata")
         case .clippedStack: L("Biglietto Doppio")
+        case .lifelike: L("Iperrealista")
         case .liquidGlass: L("Liquid Glass")
         case .secretSheet: L("Foglio segreto")
         case .secretSealed: L("Pizzino sigillato")
