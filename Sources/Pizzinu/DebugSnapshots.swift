@@ -38,6 +38,23 @@ enum DebugSnapshots {
     static func run(in directory: URL) {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         FontLibrary.reload()
+        // `PIZZINU_SNAPSHOT_NOTES=elenco.txt`: solo i foglietti elencati, una riga
+        // per foglietto: `nome|tema|colore|larghezza|altezza|testo` (`\n` = a capo).
+        // Serve per le immagini delle campagne.
+        if let path = ProcessInfo.processInfo.environment["PIZZINU_SNAPSHOT_NOTES"],
+           let list = try? String(contentsOfFile: path, encoding: .utf8) {
+            for line in list.split(separator: "\n") where !line.hasPrefix("#") {
+                let f = line.split(separator: "|", maxSplits: 5, omittingEmptySubsequences: false).map(String.init)
+                guard f.count == 6, let shape = PaperShape(rawValue: f[1]), let color = NoteColorID(rawValue: f[2]),
+                      let w = Double(f[3]), let h = Double(f[4]) else { continue }
+                var note = Note(content: f[5].replacingOccurrences(of: "\\n", with: "\n"), colorID: color, paperShape: shape)
+                note.paperWidth = w
+                note.paperHeight = h
+                render(note: note, shape: shape, to: directory.appendingPathComponent("\(f[0]).png"), controls: false)
+            }
+            renderThemeStore(to: directory)
+            return
+        }
         let colors: [NoteColorID] = [.lemon, .pink, .skyBlue, .orange, .pastelGreen]
         for (index, shape) in PaperShape.allCases.enumerated() {
             var note = Note(content: "", colorID: colors[index % colors.count], paperShape: shape)
@@ -308,7 +325,7 @@ enum DebugSnapshots {
         for sample in samples {
             var note = Note(content: sample.text, colorID: sample.color, paperShape: sample.shape, isMarkdown: sample.markdown)
             note.paperSize = sample.shape.preferredPaperSize(from: note.paperSize)
-            if sample.markdown { note.paperSize = CGSize(width: 250, height: 240) }
+            if sample.markdown { note.paperSize = CGSize(width: 250, height: 280) }
             note.isPinned = sample.pinned
             if sample.reminder { note.reminderAt = Calendar.current.date(bySettingHour: 15, minute: 30, second: 0, of: Date()) }
             render(note: note, shape: sample.shape, to: directory.appendingPathComponent("\(sample.name).png"), controls: false)
@@ -731,8 +748,15 @@ enum DebugSnapshots {
         try? FileManager.default.removeItem(at: folder)
     }
 
-    private static func render(note: Note, shape: PaperShape, to url: URL, editing: Bool = false, controls: Bool = true,
+    private static func render(note original: Note, shape: PaperShape, to url: URL, editing: Bool = false, controls: Bool = true,
                                checklist: [ChecklistItem] = []) {
+        // `PIZZINU_SNAPSHOT_FONT=GrandHotel-Regular`: tutte le note (tranne i
+        // pizzini segreti, che hanno il loro carattere) con quel carattere,
+        // per le immagini del README e delle campagne.
+        var note = original
+        if let font = ProcessInfo.processInfo.environment["PIZZINU_SNAPSHOT_FONT"], !note.isSecret {
+            note.noteFontName = font
+        }
         let metrics = StickyMetrics.make(paperSize: note.paperSize, mode: .realistic)
         let size = metrics.windowSize(forPaperSize: note.paperSize)
         let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: size),
