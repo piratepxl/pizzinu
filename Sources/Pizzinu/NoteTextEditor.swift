@@ -439,15 +439,23 @@ final class NoteTextEditor: NSTextView {
 
     // MARK: - Aspetto
 
+    /// Ombra del testo (es. l'oro in rilievo della nota natalizia); `nil` = nessuna.
+    var textShadow: NSShadow? {
+        didSet { applyAttributes() }
+    }
+
     private func applyAttributes() {
         let font = font(at: appliedPointSize)
         let paragraph = paragraphStyle()
         defaultParagraphStyle = paragraph
-        typingAttributes = [.font: font, .foregroundColor: bodyTextColor, .paragraphStyle: paragraph]
+        var attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: bodyTextColor, .paragraphStyle: paragraph]
+        if let textShadow { attributes[.shadow] = textShadow }
+        typingAttributes = attributes
         let wasApplying = isApplyingProgrammatically
         isApplyingProgrammatically = true
-        textStorage?.addAttributes([.font: font, .foregroundColor: bodyTextColor, .paragraphStyle: paragraph],
-                                   range: NSRange(location: 0, length: textStorage?.length ?? 0))
+        let all = NSRange(location: 0, length: textStorage?.length ?? 0)
+        if textShadow == nil { textStorage?.removeAttribute(.shadow, range: all) }
+        textStorage?.addAttributes(attributes, range: all)
         isApplyingProgrammatically = wasApplying
         needsDisplay = true
     }

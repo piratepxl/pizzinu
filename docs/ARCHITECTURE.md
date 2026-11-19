@@ -53,7 +53,7 @@ riconciliazione dei genitori, rientro, riordino e sanificazione.
 ### Colori e geometria
 
 `NotePalette.make` deriva tutte le tonalità da un colore base; il testo sceglie sempre la variante
-a contrasto maggiore (WCAG AA verificato dal self-test). `PaperShape` elenca **15 temi**
+a contrasto maggiore (WCAG AA verificato dal self-test). `PaperShape` elenca **16 temi** (più `christmas`, scelto e assegnato a caso solo dal 1° dicembre al 6 gennaio). `ThemeCatalog` li presenta come un negozio (collezioni, prezzo, disponibilità per stagione e per temi ottenuti); `PhotoPaper` raccoglie i temi ricavati da una foto (bordo e isofote del rilievo, es. `RuffleRelief`)
 vettoriali, `liquidGlass` compreso: la sua lastra (`LiquidGlassView`) usa `NSGlassEffectView`
 su macOS 26, senza riflessi aggiunti; perché resti trasparente anche senza fuoco, `NotePanel`
 (`keepsActiveAppearance`) dichiara sempre l'aspetto attivo — soluzione sperimentale basata su

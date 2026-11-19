@@ -21,6 +21,9 @@ final class NoteManager: ObservableObject {
     @Published private(set) var preferences: AppPreferences
     /// Nota evidenziata nella finestra principale.
     @Published var selectedNoteID: UUID?
+    /// Ultima nota sulla scrivania con cui si è lavorato (finestra attiva):
+    /// il pannello dei temi le applica il tema scelto.
+    @Published var activeNoteID: UUID?
 
     // MARK: - Dipendenze
 
@@ -141,6 +144,28 @@ final class NoteManager: ObservableObject {
         .realistic
     }
 
+    /// Temi che si possono scegliere e che le note nuove ricevono a caso:
+    /// quelli inclusi più quelli ottenuti dal negozio dei temi.
+    var availableThemes: [PaperShape] {
+        ThemeCatalog.available(installed: Set(preferences.installedThemes))
+    }
+
+    /// Applica un tema a una nota sulla scrivania (dal pannello dei temi).
+    func applyTheme(_ shape: PaperShape, to id: UUID) {
+        windowController(for: id)?.applyTheme(shape)
+        activeNoteID = id
+    }
+
+    /// Ottiene un tema dal negozio (oggi gratis) o lo toglie. Le note che lo
+    /// usano già lo tengono.
+    func setThemeInstalled(_ shape: PaperShape, _ installed: Bool) {
+        updatePreferences { prefs in
+            var set = Set(prefs.installedThemes)
+            if installed { set.insert(shape.rawValue) } else { set.remove(shape.rawValue) }
+            prefs.installedThemes = set.sorted()
+        }
+    }
+
     /// Sagoma effettiva della carta. Il tema è una scelta della singola nota
     /// (le note nuove lo ricevono a caso); senza tema si usa «Morbida».
     func paperShape(for note: Note) -> PaperShape {
@@ -161,7 +186,7 @@ final class NoteManager: ObservableObject {
         note.colorID = colorID ?? NoteColorID.allCases.randomElement() ?? .lemon
         // Anche il tema è scelto a caso fra tutti quelli disponibili: le note
         // nuove non si assomigliano tutte, come foglietti presi a caso.
-        note.paperShape = PaperShape.allCases.randomElement()
+        note.paperShape = availableThemes.randomElement()
         // Alcuni temi hanno una proporzione propria: il vetro nasce quadrato,
         // il segnalibro largo e basso.
         if let shape = note.paperShape {

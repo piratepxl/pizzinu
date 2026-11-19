@@ -63,10 +63,12 @@ stay on your Mac, and are always one click away from the menu bar.
 - **Markdown sheets.** Headings, bold, italic, strikethrough, highlight, code, quotes, lists,
   **clickable `- [ ]` tasks** and links, with a floating formatting toolbar.
 - **Checklists** nested up to three levels, with two-way completion cascade.
-- **15 paper themes**, assigned at random to new notes, including the new **Lifelike** (a sticky
-  note photographed on the wall: adhesive strip, paper lifting off, raised corner) and the system
-  **Liquid Glass** (macOS 26), 12 named colours plus a custom one, per-note fonts and text colour
-  (soft graphite by default, or black, pen blue, red, green, sepia).
+- **16 paper themes**, assigned at random to new notes, including **Lifelike** (a sticky
+  note photographed on the wall: adhesive strip, paper lifting off, raised corner), the new
+  **Lifelike Ruffled**, a small **Bookmark** for quick reminders and the system
+  **Liquid Glass** (macOS 26), all in a **Themes** window where you apply them with one click; 12 named colours plus a custom one, per-note fonts and text colour
+  (soft graphite by default, or black, pen blue, red, green, sepia). From 1 December to 6
+  January a seasonal **Christmas** theme joins them: red paper, fir garland, golden text.
 - **Archive** as a board or a list, with search, sorting, archive and a recoverable trash.
 - **Automatic updates.** Once a day Pizzinu checks for a new version and shows what is new;
   one click downloads it, verifies its signature, replaces the app and reopens it.
@@ -80,7 +82,7 @@ stay on your Mac, and are always one click away from the menu bar.
 
 <p align="center"><img src="docs/images/desktop.png" width="820" alt="Pizzinu sticky notes on a Mac desktop"></p>
 
-**13 paper themes**, plus system Liquid Glass on macOS 26. New notes get a random one.
+**16 paper themes**, Liquid Glass included (macOS 26). New notes get a random one.
 
 <p align="center"><img src="docs/images/themes.png" width="820" alt="The paper themes of Pizzinu"></p>
 

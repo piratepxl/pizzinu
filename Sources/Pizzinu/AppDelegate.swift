@@ -28,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
     private var statusMenu: NSMenu?
     private var mainWindowController: MainWindowController?
     private var settingsWindowController: SettingsWindowController?
+    private var themeStoreWindowController: ThemeStoreWindowController?
     private var hotKey: GlobalHotKey?
     private var dropCatcher: DesktopDropCatcher?
     private var preferencesObserver: AnyCancellable?
@@ -82,6 +83,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
                 presentMainWindow()
             }
             PizzinuLog.app.info("Pizzinu avviato")
+            // Collaudo: apre subito il pannello dei temi (anteprime comprese).
+            if ProcessInfo.processInfo.environment["PIZZINU_OPEN_THEMES"] != nil {
+                openThemeStore(nil)
+            }
         } catch {
             PizzinuLog.app.error("Avvio non riuscito: \(String(describing: error))")
             Alerts.presentError(title: L("Pizzinu non può essere avviato"),
@@ -331,6 +336,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation, 
         }
         NSApp.activate(ignoringOtherApps: true)
         settingsWindowController?.present()
+    }
+
+    /// Pannello dei temi (negozio).
+    @objc func openThemeStore(_ sender: Any?) {
+        guard let manager else { return }
+        // Aperto dal menu di una nota: è quella la nota a cui applicare il tema.
+        if let raw = (sender as? NSMenuItem)?.representedObject as? String, let id = UUID(uuidString: raw) {
+            manager.activeNoteID = id
+        }
+        if themeStoreWindowController == nil {
+            themeStoreWindowController = ThemeStoreWindowController(manager: manager)
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        themeStoreWindowController?.present()
     }
 
     @objc func openSettings(_ sender: Any?) {

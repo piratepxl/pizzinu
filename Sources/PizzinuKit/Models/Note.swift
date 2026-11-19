@@ -187,7 +187,10 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
 
     /// Palette completa per il disegno.
     public func palette(globalMode: GraphicMode) -> NotePalette {
-        NotePalette.make(base: resolvedColor, mode: graphicMode ?? globalMode, ink: inkColorID?.color)
+        if paperShape == .christmas {
+            return NotePalette.make(base: PaperShape.christmasRed, mode: graphicMode ?? globalMode, ink: PaperShape.christmasGold)
+        }
+        return NotePalette.make(base: resolvedColor, mode: graphicMode ?? globalMode, ink: inkColorID?.color)
     }
 
     /// Titolo mostrato nelle liste: usa la prima riga di contenuto se il titolo è vuoto.
@@ -253,9 +256,10 @@ public struct Note: Identifiable, Codable, Equatable, Sendable {
 
     /// Applica la dimensione della carta rispettando i limiti consentiti.
     public mutating func setPaperSize(_ size: CGSize) {
-        paperWidth = min(max(Double(size.width), Double(Note.minimumPaperSize.width)),
+        let minimum = paperShape?.minimumPaperSize ?? Note.minimumPaperSize
+        paperWidth = min(max(Double(size.width), Double(minimum.width)),
                          Double(Note.maximumPaperSize.width))
-        paperHeight = min(max(Double(size.height), Double(Note.minimumPaperSize.height)),
+        paperHeight = min(max(Double(size.height), Double(minimum.height)),
                           Double(Note.maximumPaperSize.height))
     }
 

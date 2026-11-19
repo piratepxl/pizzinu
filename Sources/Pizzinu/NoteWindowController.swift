@@ -257,6 +257,12 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
 
     /// Quando la nota perde il fuoco la scrittura si chiude: per riprenderla
     /// serve un nuovo doppio clic sul corpo.
+    func windowDidBecomeKey(_ notification: Notification) {
+        // La nota con cui si sta lavorando è quella a cui il pannello dei
+        // temi applica il tema scelto.
+        manager.activeNoteID = noteID
+    }
+
     func windowDidResignKey(_ notification: Notification) {
         content.endEditing()
         manager.didResignEditing(noteID: noteID)
@@ -266,7 +272,7 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
     private func adoptCurrentWindowSize() {
         let metrics = StickyMetrics.make(paperSize: note.paperSize, mode: mode)
         let proposed = metrics.paperSize(forWindowSize: panel.frame.size)
-        let clamped = Self.clamp(paper: proposed)
+        let clamped = Self.clamp(paper: proposed, shape: shape)
         if clamped != proposed {
             var frame = panel.frame
             let top = frame.maxY
@@ -328,7 +334,7 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
 
         let metrics = StickyMetrics.make(paperSize: start.paper, mode: mode)
         var paper = CGSize(width: start.paper.width + delta.width, height: start.paper.height - delta.height)
-        paper = Self.clamp(paper: paper)
+        paper = Self.clamp(paper: paper, shape: shape)
         let size = metrics.windowSize(forPaperSize: paper)
         let frame = NSRect(x: start.frame.minX,
                            y: start.frame.maxY - size.height,
@@ -347,9 +353,10 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         content.commitPendingEdits()
     }
 
-    private static func clamp(paper size: CGSize) -> CGSize {
-        CGSize(width: min(max(size.width, Note.minimumPaperSize.width), Note.maximumPaperSize.width),
-               height: min(max(size.height, Note.minimumPaperSize.height), Note.maximumPaperSize.height))
+    private static func clamp(paper size: CGSize, shape: PaperShape) -> CGSize {
+        let minimum = shape.minimumPaperSize
+        return CGSize(width: min(max(size.width, minimum.width), Note.maximumPaperSize.width),
+                      height: min(max(size.height, minimum.height), Note.maximumPaperSize.height))
     }
 
     /// Porta la finestra dentro lo schermo se la posizione salvata non è più valida.
@@ -466,13 +473,22 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
         if !secret {
         let themeItem = NSMenuItem(title: L("Tema della nota"), action: nil, keyEquivalent: "")
         let themeMenu = NSMenu()
-        for paperShape in PaperShape.allCases {
+        var shapes = manager.availableThemes
+        // Una nota che usa un tema poi tolto dal negozio lo vede comunque.
+        let current = manager.paperShape(for: note)
+        if !shapes.contains(current) && ThemeCatalog.product(for: current) != nil { shapes.append(current) }
+        for paperShape in shapes {
             let item = NSMenuItem(title: paperShape.displayName, action: #selector(chooseTheme(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = paperShape.rawValue
             item.state = manager.paperShape(for: note) == paperShape ? .on : .off
             themeMenu.addItem(item)
         }
+        themeMenu.addItem(.separator())
+        let storeItem = NSMenuItem(title: L("Altri temi…"), action: #selector(AppDelegate.openThemeStore(_:)), keyEquivalent: "")
+        storeItem.target = NSApp.delegate
+        storeItem.representedObject = noteID.uuidString
+        themeMenu.addItem(storeItem)
         themeItem.submenu = themeMenu
         menu.addItem(themeItem)
 
@@ -699,19 +715,24 @@ final class NoteWindowController: NSObject, NSWindowDelegate, NSPopoverDelegate 
     /// non le altre note.
     @objc private func chooseTheme(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String else { return }
-        let paperShape = PaperShape.resolving(raw)
+        applyTheme(PaperShape.resolving(raw))
+    }
+
+    /// Cambia il tema della nota (dal menu della nota o dal pannello dei temi).
+    func applyTheme(_ paperShape: PaperShape) {
+        guard !note.isSecret else { return }
         var updated = note
         updated.paperShape = paperShape
-        // Il segnalibro prende la sua proporzione larga e bassa anche quando
-        // lo si sceglie dal menu (se la nota non è già un nastro). La misura
-        // parte da quella predefinita, così scegliere più volte il tema non
-        // allarga la nota a ogni passaggio.
-        let resizes = paperShape == .ribbonBlue && updated.paperWidth < updated.paperHeight * 2
-        if resizes {
-            let base = CGSize(width: manager.preferences.defaultPaperWidth,
-                              height: manager.preferences.defaultPaperHeight)
-            updated.paperSize = paperShape.preferredPaperSize(from: base)
-        }
+        // Misura della carta: regola fissa (`PaperShape.paperSize(changingFrom:)`),
+        // così ogni tema ha sempre la stessa forma e passare da un tema
+        // all'altro non deforma la nota.
+        let base = CGSize(width: manager.preferences.defaultPaperWidth,
+                          height: manager.preferences.defaultPaperHeight)
+        let oldShape = manager.paperShape(for: note)
+        let newSize = PaperShape.paperSize(changingFrom: oldShape, to: paperShape,
+                                           current: updated.paperSize, base: base)
+        let resizes = abs(newSize.width - updated.paperSize.width) > 0.5 || abs(newSize.height - updated.paperSize.height) > 0.5
+        if resizes { updated.paperSize = newSize }
         note = updated
         // La sagoma usata dal disegno va aggiornata insieme alla nota: senza
         // questo il foglietto resterebbe con il tema precedente.

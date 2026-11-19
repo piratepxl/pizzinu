@@ -57,6 +57,9 @@ public struct AppPreferences: Codable, Sendable, Equatable {
     public var checksForUpdates: Bool
     /// Versione che l'utente ha scelto di saltare: non viene riproposta.
     public var skippedUpdateVersion: String?
+    /// Temi ottenuti dal negozio (`PaperShape.rawValue`); quelli inclusi non
+    /// compaiono qui perché sono sempre disponibili.
+    public var installedThemes: [String]
 
     /// Ritardo del salvataggio automatico dopo l'ultima digitazione. Non è più
     /// una scelta dell'utente: è un valore fisso, abbastanza breve da non
@@ -80,7 +83,8 @@ public struct AppPreferences: Codable, Sendable, Equatable {
                 desktopDropEnabled: Bool = true,
                 hasCompletedFirstRun: Bool = false,
                 checksForUpdates: Bool = true,
-                skippedUpdateVersion: String? = nil) {
+                skippedUpdateVersion: String? = nil,
+                installedThemes: [String] = []) {
         self.noteFontName = noteFontName
         self.defaultPaperWidth = defaultPaperWidth
         self.defaultPaperHeight = defaultPaperHeight
@@ -94,6 +98,7 @@ public struct AppPreferences: Codable, Sendable, Equatable {
         self.hasCompletedFirstRun = hasCompletedFirstRun
         self.checksForUpdates = checksForUpdates
         self.skippedUpdateVersion = skippedUpdateVersion
+        self.installedThemes = installedThemes
     }
 
     /// Decodifica tollerante: ogni campo mancante riceve il valore predefinito,
@@ -114,6 +119,7 @@ public struct AppPreferences: Codable, Sendable, Equatable {
         hasCompletedFirstRun = try container.decodeIfPresent(Bool.self, forKey: .hasCompletedFirstRun) ?? fallback.hasCompletedFirstRun
         checksForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checksForUpdates) ?? fallback.checksForUpdates
         skippedUpdateVersion = try container.decodeIfPresent(String.self, forKey: .skippedUpdateVersion)
+        installedThemes = try container.decodeIfPresent([String].self, forKey: .installedThemes) ?? []
     }
 
     /// Corregge i valori fuori intervallo provenienti da un file di configurazione.

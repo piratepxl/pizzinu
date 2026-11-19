@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.4.0 — 2026-11
+
+- **Christmas theme.** From 1 December to 6 January a seasonal theme joins the others: the
+  Lifelike paper in Christmas red, darker towards the edges, with a fir garland, candy canes,
+  red stars and silver baubles, and the text in engraved gold (Copperplate). Pick it from the
+  note menu (Note Theme) or let a new note get it at random. After the holidays it leaves the
+  menu; notes that already have it keep it.
+- **Themes window.** Pizzinu ▸ Themes… (also in the menu bar icon and at the bottom of the
+  note's theme menu, as More Themes…) shows every theme as a card, grouped into Classic,
+  Lifelike and Seasonal. Select a note on the desktop and apply a theme from the window with
+  one click. Themes you get there join the note menu and the random choice for new notes;
+  you can remove them from the menu again.
+- **New theme: Lifelike Ruffled.** The top of the Lifelike sheet, with a bottom edge that
+  ripples like real crumpled paper: folds and shadows taken from a photo of a real note. Get
+  it for free in the Themes window.
+- **Bookmark, redrawn.** Now a small, low light-blue note for quick reminders: no more pointed
+  tip, a slightly skewed sheet that lifts off the wall on the right. It can be lower than the
+  other notes (down to 84 pt).
+- **Soft paper edge on every theme**, not only Soft: the dark outline is gone everywhere
+  (Liquid Glass has no edge).
+- Switching theme no longer changes the shape of the note: round and glass notes are square,
+  Bookmark is low, and going back to a regular theme restores your size.
+
 ## 1.3.0 — 2026-11
 
 - **New theme: Lifelike.** A sticky note as if photographed on the wall: the adhesive strip

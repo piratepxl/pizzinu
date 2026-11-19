@@ -503,8 +503,8 @@ do {
         }
     }
 
-    // I temi disponibili sono quindici, e ciascuno ha un nome leggibile.
-    checkEqual(PaperShape.allCases.count, 15, "quindici temi disponibili")
+    // I temi disponibili sono sedici, e ciascuno ha un nome leggibile.
+    checkEqual(PaperShape.allCases.count, 16, "sedici temi in tutto")
     check(PaperShape.allCases.allSatisfy { !$0.displayName.isEmpty }, "ogni tema ha un nome leggibile")
     checkEqual(PaperShape.soft.displayName, "Morbida", "il tema morbido conserva il suo nome")
     checkEqual(PaperShape.crumpled.displayName, "Arricciata", "il tema arricciato ha il suo nome")
@@ -636,6 +636,98 @@ do {
         }
     }
 
+    // Cambio di tema: ogni tema ha sempre la stessa forma.
+    do {
+        let base = CGSize(width: 260, height: 220)
+        let mia = CGSize(width: 330, height: 280)
+        let rotonda = PaperShape.paperSize(changingFrom: .soft, to: .round, current: mia, base: base)
+        checkEqual(rotonda.width, rotonda.height, "la Rotonda è un cerchio")
+        let nastro = PaperShape.paperSize(changingFrom: .round, to: .ribbonBlue, current: rotonda, base: base)
+        check(nastro.width > nastro.height * 2, "il segnalibro è largo e basso")
+        checkEqual(PaperShape.paperSize(changingFrom: .ribbonBlue, to: .round, current: nastro, base: base), rotonda,
+                   "dal segnalibro alla Rotonda torna il cerchio di sempre")
+        checkEqual(PaperShape.paperSize(changingFrom: .ribbonBlue, to: .soft, current: nastro, base: base), base,
+                   "uscendo dal segnalibro la nota torna alla misura predefinita")
+        checkEqual(PaperShape.paperSize(changingFrom: .soft, to: .lifelike, current: mia, base: base), mia,
+                   "fra temi normali resta la misura scelta")
+        // Andata e ritorno su tutti i temi: la stessa forma ogni volta.
+        var size = mia
+        var forme: [PaperShape: CGSize] = [:]
+        var stabile = true
+        for giro in 0..<3 {
+            var prima: PaperShape = .soft
+            for shape in PaperShape.allCases where shape.hasOwnProportion {
+                size = PaperShape.paperSize(changingFrom: prima, to: shape, current: size, base: base)
+                if giro > 0, forme[shape] != size { stabile = false }
+                forme[shape] = size
+                prima = shape
+            }
+        }
+        check(stabile, "cambiando tema più volte ogni tema speciale ritrova la sua forma")
+    }
+
+    // Negozio dei temi: inclusi sempre disponibili, gli altri dopo «Ottieni».
+    do {
+        checkEqual(Set(ThemeCatalog.products.map(\.shape)), Set(PaperShape.allCases + [.christmas]), "ogni tema è nel negozio, Natale compreso")
+        checkEqual(ThemeCatalog.products.count, PaperShape.allCases.count + 1, "nessun tema compare due volte nel negozio")
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "Europe/Rome")!
+        let novembre = cal.date(from: DateComponents(year: 2026, month: 11, day: 12, hour: 12))!
+        let dicembre = cal.date(from: DateComponents(year: 2026, month: 12, day: 10, hour: 12))!
+        let base = ThemeCatalog.available(installed: [], on: novembre, calendar: cal)
+        check(!base.contains(.ruffledReal), "l'Increspata Iperrealista non c'è prima di ottenerla")
+        check(base.contains(.lifelike) && base.contains(.soft) && base.contains(.liquidGlass), "i temi inclusi ci sono sempre")
+        checkEqual(base.count, PaperShape.allCases.count - 1, "senza temi ottenuti manca solo quello del negozio")
+        check(ThemeCatalog.available(installed: ["ruffledReal"], on: novembre, calendar: cal).contains(.ruffledReal), "dopo «Ottieni» il tema si può scegliere")
+        check(!ThemeCatalog.available(installed: ["inesistente"], on: novembre, calendar: cal).contains(.ruffledReal), "un nome sconosciuto non sblocca nulla")
+        check(!base.contains(.christmas), "a novembre Natale non c'è")
+        check(ThemeCatalog.available(installed: [], on: dicembre, calendar: cal).contains(.christmas), "a dicembre Natale c'è, senza doverlo ottenere")
+        checkEqual(ThemeCatalog.product(for: .christmas)?.collection, .seasonal, "Natale sta fra gli stagionali")
+        checkEqual(ThemeCatalog.product(for: .ruffledReal)?.price, .free, "l'Increspata Iperrealista è gratis")
+        checkEqual(ThemeCatalog.product(for: .lifelike)?.collection, .lifelike, "l'Iperrealista sta fra gli iperrealisti")
+        check(ThemeCatalog.products.allSatisfy { !$0.summary.isEmpty }, "ogni tema ha una descrizione")
+        let vecchie = try JSONDecoder().decode(AppPreferences.self, from: Data(#"{"checksForUpdates":true}"#.utf8))
+        checkEqual(vecchie.installedThemes, [], "le preferenze vecchie non hanno temi ottenuti")
+        var prefs = AppPreferences(); prefs.installedThemes = ["ruffledReal"]
+        let riletto = try JSONDecoder().decode(AppPreferences.self, from: JSONEncoder().encode(prefs))
+        checkEqual(riletto.installedThemes, ["ruffledReal"], "i temi ottenuti si salvano")
+        // Sagoma: alta e dritta come l'Iperrealista, fondo dalla foto.
+        let r = CGRect(x: 0, y: 0, width: 240, height: 210)
+        let sagoma = StickyGeometry.ruffledRealPaperPath(in: r)
+        check(sagoma.contains(CGPoint(x: 3, y: 205)) && sagoma.contains(CGPoint(x: 237, y: 205)), "l'Increspata Iperrealista è larga in alto")
+        check(sagoma.contains(CGPoint(x: 3, y: 105)) && sagoma.contains(CGPoint(x: 237, y: 105)), "e dritta ai lati")
+        check(!sagoma.contains(CGPoint(x: 0.58 * 240, y: 0.05 * 210)), "il fondo ha la tacca della foto")
+        // Tema di prova mai uscito: le note salvate tornano all'Iperrealista.
+        checkEqual(PaperShape.resolving("crumpledReal"), .lifelike, "le note del tema di prova tornano all'Iperrealista")
+        check(!PaperShape.allCases.map(\.rawValue).contains("crumpledReal"), "il tema di prova non è fra i temi")
+        check(PhotoPaper.for(.ruffledReal) != nil && PhotoPaper.for(.crumpled) == nil, "solo i temi da foto hanno il rilievo")
+    }
+
+    // Nota di Natale: disponibile solo dal 1° dicembre al 6 gennaio.
+    do {
+        var calendario = Calendar(identifier: .gregorian)
+        calendario.timeZone = TimeZone(identifier: "Europe/Rome")!
+        func giorno(_ y: Int, _ m: Int, _ d: Int) -> Date {
+            calendario.date(from: DateComponents(year: y, month: m, day: d, hour: 12))!
+        }
+        for (data, attesa, nome) in [(giorno(2026, 11, 30), false, "30 novembre"), (giorno(2026, 12, 1), true, "1° dicembre"),
+                                     (giorno(2026, 12, 25), true, "Natale"), (giorno(2027, 1, 6), true, "Epifania"),
+                                     (giorno(2027, 1, 7), false, "7 gennaio"), (giorno(2027, 7, 15), false, "luglio")] {
+            checkEqual(PaperShape.isChristmasSeason(data, calendar: calendario), attesa, "periodo delle feste il \(nome)")
+            checkEqual(PaperShape.available(on: data, calendar: calendario).contains(.christmas), attesa,
+                       "il tema Natale si sceglie il \(nome) solo se è periodo di feste")
+        }
+        check(!PaperShape.allCases.contains(.christmas), "Natale non è fra i temi di sempre")
+        checkEqual(PaperShape.available(on: giorno(2026, 12, 10), calendar: calendario).count, PaperShape.allCases.count + 1,
+                   "durante le feste c'è un tema in più")
+        checkEqual(PaperShape.resolving("christmas"), .christmas, "una nota natalizia salvata resta natalizia")
+        let natalizia = Note(content: "x", paperShape: .christmas).palette(globalMode: .realistic)
+        checkEqual(natalizia.text, PaperShape.christmasGold, "la nota di Natale scrive in oro")
+        checkEqual(natalizia.base, PaperShape.christmasRed, "la nota di Natale è rossa")
+        check(PaperShape.christmasRed.contrastRatio(with: PaperShape.christmasGold) >= 3,
+              "l'oro si legge sul rosso (testo grande)")
+        check(!PaperShape.christmas.usesNoteColor, "la nota di Natale non offre il cambio di colore")
+    }
+
     // Temi a colore fisso: l'interfaccia non offre il cambio di colore.
     checkEqual(PaperShape.allCases.filter { !$0.usesNoteColor }.map(\.rawValue).sorted(),
                ["clippedStack", "graphPinned", "ledgerTaped", "liquidGlass", "ribbonBlue", "spiralPad", "tornRuled"],
@@ -646,7 +738,16 @@ do {
     let base = Note.defaultPaperSize
     let nastro = PaperShape.ribbonBlue.preferredPaperSize(from: base)
     check(nastro.width >= nastro.height * 2, "il segnalibro nasce largo e basso")
-    check(nastro.height >= Note.minimumPaperSize.height, "il segnalibro rispetta l'altezza minima")
+    check(nastro.height < Note.minimumPaperSize.height, "il segnalibro è più basso delle altre note")
+    check(nastro.height >= PaperShape.ribbonBlue.minimumPaperSize.height, "il segnalibro rispetta la sua altezza minima")
+    do {
+        var piccola = Note(content: "x", colorID: .skyBlue, paperShape: .ribbonBlue)
+        piccola.paperSize = PaperShape.ribbonPaperSize
+        checkEqual(piccola.paperSize, PaperShape.ribbonPaperSize, "la misura del segnalibro non viene alzata al minimo delle altre note")
+        var altra = Note(content: "x", colorID: .skyBlue, paperShape: .soft)
+        altra.paperSize = PaperShape.ribbonPaperSize
+        checkEqual(altra.paperSize.height, Note.minimumPaperSize.height, "le altre note restano alte almeno 120 pt")
+    }
     let lastra = PaperShape.liquidGlass.preferredPaperSize(from: base)
     checkEqual(lastra.width, lastra.height, "la lastra di vetro nasce quadrata")
     checkEqual(PaperShape.soft.preferredPaperSize(from: base), base, "gli altri temi usano la misura predefinita")
@@ -663,15 +764,13 @@ do {
     let segnalibroPath = StickyGeometry.ribbonBluePath(in: rettangoloReale)
     let segnalibro = segnalibroPath.boundingBoxOfPath
     check(segnalibro.height >= rettangoloReale.height * 0.99, "il segnalibro è alto quanto la carta")
-    let punta = StickyGeometry.ribbonTipDepth(in: rettangoloReale)
     check(segnalibroPath.contains(CGPoint(x: rettangoloReale.maxX - 1, y: rettangoloReale.midY)),
-          "la punta del segnalibro arriva al bordo destro")
-    check(!segnalibroPath.contains(CGPoint(x: rettangoloReale.maxX - 2, y: rettangoloReale.maxY - 2)),
-          "l'angolo in alto a destra è tagliato dalla punta")
-    check(segnalibroPath.contains(CGPoint(x: rettangoloReale.minX + 6, y: rettangoloReale.minY + 6)),
-          "il lato sinistro del segnalibro è rettangolare")
+          "il segnalibro arriva al bordo destro")
+    check(segnalibroPath.contains(CGPoint(x: rettangoloReale.minX + 6, y: rettangoloReale.minY + 6))
+          && segnalibroPath.contains(CGPoint(x: rettangoloReale.maxX - 6, y: rettangoloReale.maxY - 4)),
+          "il segnalibro è un foglietto rettangolare, appena storto")
     let testoSegnalibro = StickyGeometry.contentRect(in: rettangoloReale, metrics: metricheReali, shape: .ribbonBlue)
-    check(testoSegnalibro.maxX <= rettangoloReale.maxX - punta * 0.8, "il testo resta prima della punta")
+    check(testoSegnalibro.width >= rettangoloReale.width * 0.70, "nel segnalibro il testo usa quasi tutta la larghezza")
 
     // Biglietto doppio: la sottopagina dietro ha un contorno valido e il foglio
     // davanti è regolare.

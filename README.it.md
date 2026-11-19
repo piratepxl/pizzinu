@@ -73,10 +73,15 @@ connessione è il controllo giornaliero degli aggiornamenti su GitHub, anonimo e
   completamento bidirezionale; Invio su una voce vuota rientrata la riporta indietro di un livello.
 - **Grafica realistica del foglietto** disegnata con tracciati vettoriali: ombra morbida,
   superficie con variazione di luminosità, bordo naturale. Nitida su Retina a ogni dimensione.
-- **15 temi della carta**, assegnati a caso alle note nuove e cambiabili per singola nota:
+- **16 temi della carta**, assegnati a caso alle note nuove e cambiabili per singola nota:
   Morbida, Increspata, Arricciata, Staccata, Nastrata, Graffettata, Rotonda, Strappata,
-  Segnalibro (nastro largo e basso, con la punta), Quadrettata, Blocco Lungo, Spiralata, Biglietto Doppio, **Iperrealista** (un post-it vero attaccato al muro: striscia adesiva, carta che si stacca, angolo sollevato) e **Liquid Glass**
+  Segnalibro (foglietto azzurro piccolo e basso, per gli appunti brevi), Quadrettata, Blocco Lungo, Spiralata, Biglietto Doppio, **Iperrealista** (un post-it vero attaccato al muro: striscia adesiva, carta che si stacca, angolo sollevato), **Increspata Iperrealista** (il fondo increspato ricavato dalla foto di un foglio vero) e **Liquid Glass**
   (vetro di sistema `NSGlassEffectView` su macOS 26, senza riflessi aggiunti; il pannello mantiene sempre l'aspetto attivo, così il vetro resta trasparente anche quando la nota non ha il fuoco — soluzione sperimentale, vedi docs/LIMITS.md).
+- **Finestra dei temi** (Pizzinu ▸ Temi…): tutti i temi come schede, divisi in Classici,
+  Iperrealisti e Stagionali; si applicano con un clic alla nota selezionata. Bordo tenue, nel
+  colore della carta, su tutti i temi.
+- **Tema di Natale**, solo dal 1° dicembre al 6 gennaio: carta Iperrealista rossa, ghirlanda di
+  abete con bastoncini di zucchero, stelle e palline, scritta in oro inciso (Copperplate).
 - **Palette di 12 colori** con un nome per ciascuno, più **colore personalizzato** per nota. I temi con
   una carta di colore proprio (Strappata, Segnalibro, Quadrettata, Blocco Lungo, Spiralata, Biglietto
   Doppio, Liquid Glass) non mostrano la scelta del colore.
@@ -105,7 +110,7 @@ connessione è il controllo giornaliero degli aggiornamenti su GitHub, anonimo e
 
 <p align="center"><img src="docs/images/desktop.png" width="820" alt="Pizzinu: pizzini sulla scrivania del Mac"></p>
 
-**13 temi di carta**, più il vetro Liquid Glass di sistema su macOS 26. Le note nuove ne ricevono uno a caso.
+**16 temi di carta**, Liquid Glass compreso (macOS 26). Le note nuove ne ricevono uno a caso.
 
 <p align="center"><img src="docs/images/themes.png" width="820" alt="I temi di carta di Pizzinu"></p>
 

@@ -109,7 +109,8 @@ final class NoteContentView: NSView {
         self.palette = palette
         self.shape = shape
         self.isSecret = note.isSecret
-        self.noteFontName = note.isSecret ? Self.secretFontName : note.noteFontName
+        self.noteFontName = note.isSecret ? Self.secretFontName
+            : (shape == .christmas ? StickySurfaceView.christmasFontName : note.noteFontName)
         self.fontSize = CGFloat(note.fontSize)
 
         surface.metrics = metrics
@@ -322,6 +323,16 @@ final class NoteContentView: NSView {
                           insertionColor: ink,
                           placeholder: isSecret ? L("Scrivi il tuo segreto…") : L("Cosa non vuoi dimenticare?"),
                           hint: L("Doppio clic per scrivere"))
+        // Nota natalizia: l'oro è inciso, con un'ombra scura e calda sotto.
+        if shape == .christmas {
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor(calibratedRed: 0.22, green: 0.02, blue: 0.02, alpha: 0.75)
+            shadow.shadowOffset = NSSize(width: 0, height: -1.2)
+            shadow.shadowBlurRadius = 1.6
+            textEditor?.textShadow = shadow
+        } else {
+            textEditor?.textShadow = nil
+        }
         checklistEditor?.apply(fontSize: fontSize, textColor: palette.text, fontName: noteFontName)
         markdownEditor?.apply(source: note.content,
                               fontName: noteFontName,

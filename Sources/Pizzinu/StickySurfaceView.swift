@@ -28,11 +28,9 @@ struct PaperFinish: Equatable {
     var grain: Grain = .none
 
     static func standard(for shape: PaperShape) -> PaperFinish {
-        switch shape {
-        // Nastrata e Graffettata sono la stessa carta della Morbida.
-        case .soft, .taped, .clipped: PaperFinish(edge: .tonal)
-        default: PaperFinish()
-        }
+        // Bordo tenue per tutti i temi (scelta dell'utente, 12 nov 2026): il
+        // contorno lo dà l'ombra. Liquid Glass non ha bordo disegnato.
+        shape == .liquidGlass ? PaperFinish(edge: .none) : PaperFinish(edge: .tonal)
     }
 
     /// Solo per lo strumento di istantanee: forza un aspetto sul tema «Morbida».
@@ -76,6 +74,15 @@ final class StickySurfaceView: NSView {
         context.setShouldAntialias(true)
         context.setAllowsAntialiasing(true)
 
+        if shape == .christmas {
+            drawHyperreal(in: context, rect: paperRect)
+            drawChristmas(in: context, rect: paperRect)
+            return
+        }
+        if let photo = PhotoPaper.for(shape) {
+            drawPhotoRelief(in: context, rect: paperRect, photo: photo, withStrip: true)
+            return
+        }
         if shape == .lifelike {
             drawHyperreal(in: context, rect: paperRect)
             return
@@ -123,7 +130,7 @@ final class StickySurfaceView: NSView {
         case .clippedStack:
             drawSoftVeils(in: context, path: paperPath, rect: paperRect)
             drawPaperclip(in: context, rect: paperRect, color: NSColor(calibratedWhite: 0.68, alpha: 1))
-        case .liquidGlass, .lifelike:
+        case .liquidGlass, .lifelike, .ruffledReal, .christmas:
             break
         case .secretSheet:
             drawSecretSheet(in: context, path: paperPath, rect: paperRect)
@@ -467,6 +474,31 @@ final class StickySurfaceView: NSView {
 
     private func drawThemeUnderlay(in context: CGContext, rect: CGRect) {
         switch shape {
+        case .ribbonBlue where showsShadow:
+            // La metà destra si stacca dal muro: sotto e a destra un'ombra
+            // più larga e spostata, che sfuma verso sinistra.
+            context.saveGState()
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            context.setShadow(offset: CGSize(width: 5, height: -7), blur: 8,
+                              color: NSColor.black.withAlphaComponent(0.50).cgColor)
+            context.addPath(StickyGeometry.ribbonBluePath(in: rect))
+            context.setFillColor(NSColor.black.cgColor)
+            context.fillPath()
+            context.setShadow(offset: .zero, blur: 0, color: nil)
+            // Tiene solo l'ombra (non il foglio, che si disegna dopo) e solo
+            // dalla metà verso destra.
+            context.setBlendMode(.destinationOut)
+            context.addPath(StickyGeometry.ribbonBluePath(in: rect))
+            context.fillPath()
+            context.setBlendMode(.destinationIn)
+            if let fade = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                                     colors: [NSColor.clear.cgColor, NSColor.black.cgColor] as CFArray,
+                                     locations: [0.30, 0.85]) {
+                context.drawLinearGradient(fade, start: CGPoint(x: rect.minX, y: 0), end: CGPoint(x: rect.maxX, y: 0),
+                                           options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            }
+            context.endTransparencyLayer()
+            context.restoreGState()
         case .clippedStack:
             let back = rect.offsetBy(dx: -rect.width * 0.10, dy: -rect.height * 0.06)
             context.saveGState()
@@ -633,20 +665,29 @@ final class StickySurfaceView: NSView {
 
     /// Nastro del segnalibro: una luce lungo il bordo superiore e un'ombra
     /// lungo quello inferiore, come un tessuto leggermente curvo.
+    /// Il foglietto prende la luce da sinistra in basso; verso l'angolo in
+    /// alto a destra, dove la carta si stacca dal muro e gira, si scurisce.
     private func drawRibbonSheen(in context: CGContext, path: CGPath, rect: CGRect) {
         context.saveGState()
         defer { context.restoreGState() }
         context.addPath(path)
         context.clip()
+        let shade = NSColor(calibratedRed: 0.20, green: 0.42, blue: 0.52, alpha: 1)
         drawGradient(in: context,
-                     colors: [NSColor.white.withAlphaComponent(0.22), NSColor.white.withAlphaComponent(0)],
-                     from: CGPoint(x: rect.midX, y: rect.maxY),
-                     to: CGPoint(x: rect.midX, y: rect.maxY - rect.height * 0.30),
+                     colors: [NSColor.white.withAlphaComponent(0.16), NSColor.white.withAlphaComponent(0)],
+                     from: CGPoint(x: rect.minX, y: rect.minY),
+                     to: CGPoint(x: rect.minX + rect.width * 0.45, y: rect.minY + rect.height * 0.9),
                      extend: false)
         drawGradient(in: context,
-                     colors: [NSColor.black.withAlphaComponent(0.14), NSColor.black.withAlphaComponent(0)],
-                     from: CGPoint(x: rect.midX, y: rect.minY),
-                     to: CGPoint(x: rect.midX, y: rect.minY + rect.height * 0.22),
+                     colors: [shade.withAlphaComponent(0), shade.withAlphaComponent(0.12), shade.withAlphaComponent(0.38)],
+                     from: CGPoint(x: rect.minX + rect.width * 0.55, y: rect.minY + rect.height * 0.30),
+                     to: CGPoint(x: rect.maxX, y: rect.maxY),
+                     extend: false)
+        // Il bordo destro, staccato, è appena più scuro.
+        drawGradient(in: context,
+                     colors: [shade.withAlphaComponent(0), shade.withAlphaComponent(0.12)],
+                     from: CGPoint(x: rect.maxX - rect.width * 0.07, y: rect.midY),
+                     to: CGPoint(x: rect.maxX, y: rect.midY),
                      extend: false)
     }
 
@@ -881,10 +922,11 @@ final class StickySurfaceView: NSView {
     private var themeFill: (top: NSColor, bottom: NSColor, edge: NSColor, shadow: NSColor)? {
         switch shape {
         case .ribbonBlue:
-            return (NSColor(calibratedRed: 0.17, green: 0.65, blue: 0.96, alpha: 1),
-                    NSColor(calibratedRed: 0.12, green: 0.56, blue: 0.90, alpha: 1),
-                    NSColor(calibratedRed: 0.10, green: 0.46, blue: 0.78, alpha: 1),
-                    NSColor.black.withAlphaComponent(0.16))
+            // Azzurro chiaro del foglietto: più scuro in alto, più chiaro in basso.
+            return (NSColor(calibratedRed: 0.66, green: 0.86, blue: 0.94, alpha: 1),
+                    NSColor(calibratedRed: 0.76, green: 0.92, blue: 0.98, alpha: 1),
+                    NSColor(calibratedRed: 0.55, green: 0.76, blue: 0.86, alpha: 1),
+                    NSColor.black.withAlphaComponent(0.22))
         case .graphPinned:
             return (NSColor(calibratedWhite: 0.97, alpha: 1),
                     NSColor(calibratedWhite: 0.93, alpha: 1),
@@ -1264,7 +1306,7 @@ extension StickySurfaceView {
                                       : scaled(base.adjustingBrightness(by: -0.20).withAlpha(0.07)))
         }
         context.setLineCap(.round)
-        for _ in 0..<5 {
+        for _ in 0..<(shape == .christmas ? 0 : 5) {
             let startX = rect.minX + (0.10 + crease.next() * 0.80) * rect.width
             let start = CGPoint(x: startX, y: stripBottom - 2 - crease.next() * rect.height * 0.04)
             let length = rect.height * (0.07 + crease.next() * 0.12)
@@ -1404,6 +1446,315 @@ extension StickySurfaceView {
         context.rotate(by: angle)
         context.scaleBy(x: 1, y: squash)
         context.drawRadialGradient(gradient, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: radius, options: [])
+        context.restoreGState()
+    }
+}
+
+// MARK: - Increspata Iperrealista (ricavata da una foto)
+
+extension StickySurfaceView {
+    static func reliefPath(in rect: CGRect, photo: PhotoPaper, topY: CGFloat? = nil) -> CGPath {
+        StickyGeometry.photoPaperPath(in: rect, photo: photo, topY: topY)
+    }
+
+    private static func reliefRegion(_ levels: [[[CGFloat]]], _ index: Int, in rect: CGRect, photo: PhotoPaper) -> CGPath {
+        let path = CGMutablePath()
+        for poly in levels[index] {
+            let points = photo.points(poly, in: rect)
+            guard points.count > 2 else { continue }
+            path.addLines(between: points)
+            path.closeSubpath()
+        }
+        return path
+    }
+
+    /// Foglio increspato: in alto l'Iperrealista (striscia di colla e confine
+    /// irregolare), in basso il bordo e le pieghe ricavati dalla foto, con le
+    /// isofote del rilievo riempite una sull'altra.
+    func drawPhotoRelief(in context: CGContext, rect box: CGRect, photo: PhotoPaper, withStrip: Bool) {
+        // `box` è il riquadro della carta; `rect` il foglio (più stretto se
+        // il rotolo sporge ai lati).
+        let rect = photo.sheetRect(in: box)
+        let path = Self.reliefPath(in: box, photo: photo)
+        let base = palette.base
+        let stripBottom = rect.maxY - min(rect.height * 0.20, 46)
+        if showsShadow {
+            // Un'unica ombra esterna, morbida, solo sotto la curva più grande
+            // del bordo inferiore (dove la carta si solleva di più): ai lati
+            // sfuma a zero, quindi non disegna il contorno del profilo.
+            let warm = base.adjustingBrightness(by: -0.58).adjustingSaturation(by: 0.25)
+            let curve = Self.reliefPath(in: box, photo: photo, topY: rect.minY + rect.height * photo.shadowTop)
+            context.saveGState()
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            context.setShadow(offset: CGSize(width: 1, height: -7), blur: 11, color: scaled(warm.withAlpha(0.40)).cgColor)
+            context.addPath(curve)
+            context.setFillColor(scaled(base).cgColor)
+            context.fillPath()
+            context.setShadow(offset: .zero, blur: 0, color: nil)
+            context.setBlendMode(.destinationIn)
+            if let fade = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                                     colors: [NSColor.clear.cgColor, NSColor.black.cgColor, NSColor.black.cgColor, NSColor.clear.cgColor] as CFArray,
+                                     locations: photo.shadowBand) {
+                context.drawLinearGradient(fade, start: CGPoint(x: box.minX, y: 0), end: CGPoint(x: box.maxX, y: 0),
+                                           options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            }
+            context.endTransparencyLayer()
+            context.restoreGState()
+        }
+        context.saveGState()
+        context.addPath(path)
+        context.clip()
+        drawGradient(in: context,
+                     colors: [scaled(base.adjustingBrightness(by: 0.02)), scaled(base.adjustingBrightness(by: -0.02))],
+                     from: CGPoint(x: rect.midX, y: rect.maxY), to: CGPoint(x: rect.midX, y: rect.minY))
+        let ink = scaled(base.adjustingBrightness(by: -0.60).adjustingSaturation(by: 0.20))
+        let darkAlpha = min(0.9, photo.darkStep * photo.strength)
+        let lightAlpha = min(0.9, photo.lightStep * photo.strength)
+        for index in photo.darkLevels.indices {
+            context.addPath(Self.reliefRegion(photo.darkLevels, index, in: box, photo: photo))
+            context.setFillColor(ink.withAlphaComponent(darkAlpha).cgColor)
+            context.fillPath(using: .evenOdd)
+        }
+        for index in photo.lightLevels.indices {
+            context.addPath(Self.reliefRegion(photo.lightLevels, index, in: box, photo: photo))
+            context.setFillColor(NSColor.white.withAlphaComponent(lightAlpha).cgColor)
+            context.fillPath(using: .evenOdd)
+        }
+        if withStrip {
+            // Parte alta dell'Iperrealista: striscia di colla, confine
+            // irregolare, luce subito sotto.
+            let boundary = Self.hyperrealFoldLine(in: rect, stripBottom: stripBottom)
+            let strip = boundary.mutableCopy() ?? CGMutablePath()
+            strip.addLine(to: CGPoint(x: rect.maxX + 2, y: rect.maxY + 2))
+            strip.addLine(to: CGPoint(x: rect.minX - 2, y: rect.maxY + 2))
+            strip.closeSubpath()
+            let stripColor = scaled(base.adjustingBrightness(by: -0.05).adjustingSaturation(by: 0.08))
+            context.saveGState()
+            context.setShadow(offset: CGSize(width: 0, height: -1.6), blur: 3.2, color: stripColor.withAlphaComponent(0.9).cgColor)
+            context.addPath(strip)
+            context.setFillColor(stripColor.cgColor)
+            context.fillPath()
+            context.restoreGState()
+            context.saveGState()
+            context.setShadow(offset: CGSize(width: 0, height: -0.8), blur: 1.6,
+                              color: scaled(base.adjustingBrightness(by: -0.35).withAlpha(0.18)).cgColor)
+            context.addPath(boundary)
+            context.setStrokeColor(scaled(base.adjustingBrightness(by: -0.25).withAlpha(0.10)).cgColor)
+            context.setLineWidth(0.8)
+            context.strokePath()
+            context.restoreGState()
+            context.saveGState()
+            let below = CGMutablePath()
+            below.addRect(rect.insetBy(dx: -4, dy: -4))
+            below.addPath(strip)
+            context.addPath(below)
+            context.clip(using: .evenOdd)
+            drawGradient(in: context, colors: [NSColor.white.withAlphaComponent(0.13), NSColor.clear],
+                         from: CGPoint(x: rect.midX, y: stripBottom + 5), to: CGPoint(x: rect.midX, y: stripBottom - rect.height * 0.18),
+                         extend: false)
+            context.restoreGState()
+        }
+        context.restoreGState()
+        drawPaperGrain(in: context, path: path, rect: box, grain: .subtle)
+        // Il taglio in alto prende luce (come l'Iperrealista); nessun bordino.
+        context.saveGState()
+        context.move(to: CGPoint(x: rect.minX + 0.5, y: rect.maxY - 0.5))
+        context.addLine(to: CGPoint(x: rect.maxX - 0.5, y: rect.maxY - 0.5 - rect.height * 0.004))
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.55).cgColor)
+        context.setLineWidth(0.8)
+        context.strokePath()
+        context.restoreGState()
+    }
+}
+
+// MARK: - Nota natalizia (prova)
+
+extension StickySurfaceView {
+    /// Carattere fisso della nota natalizia (scelto dall'utente il 12 nov
+    /// 2026): Copperplate, maiuscoletto inciso, di sistema su macOS.
+    static let christmasFontName = "Copperplate"
+
+    /// Sopra la base Iperrealista rossa: il rosso si scurisce verso i bordi,
+    /// una trama sottile come il cartoncino del biglietto, la ghirlanda di
+    /// abete con stelle, palline e bastoncini di zucchero.
+    func drawChristmas(in context: CGContext, rect: CGRect) {
+        let path = StickyGeometry.lifelikePaperPath(in: rect)
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB) else { return }
+        context.saveGState()
+        context.addPath(path)
+        context.clip()
+        // Rosso più scuro verso i bordi.
+        let center = CGPoint(x: rect.midX, y: rect.midY - rect.height * 0.08)
+        if let vignette = CGGradient(colorsSpace: space,
+                                     colors: [NSColor(calibratedRed: 0.35, green: 0.02, blue: 0.04, alpha: 0).cgColor,
+                                              NSColor(calibratedRed: 0.35, green: 0.02, blue: 0.04, alpha: 0.20).cgColor,
+                                              NSColor(calibratedRed: 0.30, green: 0.01, blue: 0.03, alpha: 0.62).cgColor] as CFArray,
+                                     locations: [0, 0.45, 1]) {
+            context.drawRadialGradient(vignette, startCenter: center, startRadius: 0, endCenter: center,
+                                       endRadius: hypot(rect.width, rect.height) * 0.62, options: [.drawsAfterEndLocation])
+        }
+        // Trama verticale finissima, come il cartoncino.
+        context.setLineWidth(0.5)
+        context.setStrokeColor(NSColor.black.withAlphaComponent(0.035).cgColor)
+        var x = rect.minX
+        while x < rect.maxX {
+            context.move(to: CGPoint(x: x, y: rect.minY))
+            context.addLine(to: CGPoint(x: x, y: rect.maxY))
+            x += 2
+        }
+        context.strokePath()
+        context.restoreGState()
+
+        drawGarland(in: context, rect: rect)
+    }
+
+    private func drawGarland(in context: CGContext, rect: CGRect) {
+        let unit = max(0.75, min(1.3, rect.width / 260))
+        let top = rect.maxY + 3 * unit
+        let bottom = rect.maxY - rect.height * 0.23
+        var random = SeededRandom(seed: 0xC0FFEE)
+
+        context.saveGState()
+        // Tutta la ghirlanda getta un'ombra morbida sulla carta.
+        context.setShadow(offset: CGSize(width: 0, height: -3 * unit), blur: 6 * unit,
+                          color: NSColor(calibratedRed: 0.12, green: 0, blue: 0, alpha: 0.55).cgColor)
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+        context.setLineCap(.round)
+
+        // Rami di abete: tanti rametti sovrapposti, inclinati in modo diverso,
+        // con gli aghi irregolari tutt'intorno al gambo. Tre strati: dietro
+        // verdi scuri, davanti verdi più vivi con qualche punta chiara.
+        let palettes: [[NSColor]] = [
+            [NSColor(calibratedRed: 0.02, green: 0.14, blue: 0.07, alpha: 1), NSColor(calibratedRed: 0.03, green: 0.19, blue: 0.09, alpha: 1), NSColor(calibratedRed: 0.05, green: 0.24, blue: 0.11, alpha: 1)],
+            [NSColor(calibratedRed: 0.04, green: 0.23, blue: 0.10, alpha: 1), NSColor(calibratedRed: 0.06, green: 0.31, blue: 0.13, alpha: 1), NSColor(calibratedRed: 0.10, green: 0.38, blue: 0.16, alpha: 1)],
+            [NSColor(calibratedRed: 0.07, green: 0.33, blue: 0.14, alpha: 1), NSColor(calibratedRed: 0.12, green: 0.43, blue: 0.18, alpha: 1), NSColor(calibratedRed: 0.30, green: 0.58, blue: 0.27, alpha: 1)]
+        ]
+        let bandHeight = top - bottom
+        for layer in 0..<3 {
+            let count = Int(rect.width / (layer == 0 ? 26 : 30)) + 3
+            var buckets = [CGMutablePath(), CGMutablePath(), CGMutablePath()]
+            for _ in 0..<count {
+                let start = CGPoint(x: rect.minX + random.next() * rect.width,
+                                    y: bottom + bandHeight * (0.25 + random.next() * 0.55))
+                let angle = (random.next() - 0.5) * 0.9 + (random.next() > 0.5 ? 0 : .pi)
+                // I rametti restano dentro il margine della finestra: la punta
+                // (con i suoi aghi) non supera di 3 pt il bordo della carta né
+                // di 12 pt il lato superiore, così nulla viene tagliato.
+                var length = (38 + random.next() * 34) * unit
+                let reachX = cos(angle) > 0 ? (rect.maxX + 3 - start.x) / cos(angle) : (rect.minX - 3 - start.x) / cos(angle)
+                let reachY = sin(angle) > 0 ? (rect.maxY + 12 - start.y) / sin(angle) : .greatestFiniteMagnitude
+                length = max(14 * unit, min(length, reachX, reachY))
+                let bend = (random.next() - 0.5) * 0.5
+                let needle = (layer == 2 ? 10 : 12.5) * unit
+                let steps = Int(length / (1.3 * unit))
+                for step in 0...steps {
+                    let t = CGFloat(step) / CGFloat(max(1, steps))
+                    let a0 = angle + bend * t
+                    let p = CGPoint(x: start.x + cos(angle) * length * t + cos(a0 + .pi / 2) * bend * 8 * t * t,
+                                    y: start.y + sin(angle) * length * t + sin(a0 + .pi / 2) * bend * 8 * t * t)
+                    // Gli aghi si accorciano verso la punta del rametto.
+                    let taper = 1 - 0.45 * t
+                    for _ in 0..<2 {
+                        let side: CGFloat = random.next() > 0.5 ? 1 : -1
+                        let spread = side * (0.45 + random.next() * 0.85)
+                        let l = needle * taper * (0.55 + random.next() * 0.55)
+                        let dir = a0 + spread
+                        let end = CGPoint(x: p.x + cos(dir) * l, y: p.y + sin(dir) * l)
+                        // Più aghi scuri che chiari.
+                        let r = random.next()
+                        let bucket = r < 0.45 ? 0 : (r < 0.85 ? 1 : 2)
+                        buckets[bucket].move(to: p)
+                        buckets[bucket].addLine(to: end)
+                    }
+                }
+            }
+            for (index, bucket) in buckets.enumerated() {
+                context.addPath(bucket)
+                context.setStrokeColor(palettes[layer][index].cgColor)
+                context.setLineWidth((layer == 2 ? 0.85 : 1.05) * unit)
+                context.strokePath()
+            }
+        }
+
+        // Addobbi: posizioni fisse lungo la ghirlanda, un po' sfalsate.
+        let band = { (f: CGFloat) -> CGFloat in bottom + (top - bottom) * f }
+        let canes: [(CGFloat, CGFloat, CGFloat)] = [(0.08, 0.62, -0.35), (0.47, 0.42, 0.25), (0.80, 0.68, -0.15)]
+        for (fx, fy, tilt) in canes { drawCandyCane(in: context, at: CGPoint(x: rect.minX + rect.width * fx, y: band(fy)), size: 21 * unit, tilt: tilt) }
+        let stars: [(CGFloat, CGFloat, CGFloat)] = [(0.22, 0.38, 0.2), (0.63, 0.30, -0.25), (0.93, 0.45, 0.1)]
+        for (fx, fy, tilt) in stars { drawStar(in: context, center: CGPoint(x: rect.minX + rect.width * fx, y: band(fy)), radius: 11.5 * unit, tilt: tilt) }
+        let balls: [(CGFloat, CGFloat)] = [(0.33, 0.62), (0.56, 0.70), (0.74, 0.32), (0.13, 0.25)]
+        for (fx, fy) in balls { drawBauble(in: context, center: CGPoint(x: rect.minX + rect.width * fx, y: band(fy)), radius: 6.5 * unit) }
+
+        context.endTransparencyLayer()
+        context.restoreGState()
+    }
+
+    /// Stella rossa a cinque punte, con le facce in luce e in ombra.
+    private func drawStar(in context: CGContext, center: CGPoint, radius: CGFloat, tilt: CGFloat) {
+        var points: [CGPoint] = []
+        for index in 0..<10 {
+            let r = index % 2 == 0 ? radius : radius * 0.45
+            let a = .pi / 2 + tilt + CGFloat(index) * .pi / 5
+            points.append(CGPoint(x: center.x + cos(a) * r, y: center.y + sin(a) * r))
+        }
+        let star = CGMutablePath()
+        star.addLines(between: points)
+        star.closeSubpath()
+        context.addPath(star)
+        context.setFillColor(NSColor(calibratedRed: 0.78, green: 0.08, blue: 0.11, alpha: 1).cgColor)
+        context.fillPath()
+        // Ogni punta ha un lato in luce e uno in ombra (rilievo).
+        for index in 0..<10 {
+            let facet = CGMutablePath()
+            facet.move(to: center)
+            facet.addLine(to: points[index])
+            facet.addLine(to: points[(index + 1) % 10])
+            facet.closeSubpath()
+            context.addPath(facet)
+            context.setFillColor(index % 2 == 0 ? NSColor(calibratedRed: 1, green: 0.45, blue: 0.42, alpha: 0.35).cgColor
+                                                : NSColor(calibratedRed: 0.30, green: 0, blue: 0.02, alpha: 0.35).cgColor)
+            context.fillPath()
+        }
+    }
+
+    /// Pallina argentata: sfera con riflesso.
+    private func drawBauble(in context: CGContext, center: CGPoint, radius: CGFloat) {
+        guard let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                                        colors: [NSColor.white.cgColor,
+                                                 NSColor(calibratedRed: 0.80, green: 0.82, blue: 0.86, alpha: 1).cgColor,
+                                                 NSColor(calibratedRed: 0.42, green: 0.45, blue: 0.50, alpha: 1).cgColor] as CFArray,
+                                        locations: [0, 0.4, 1]) else { return }
+        context.saveGState()
+        context.addEllipse(in: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
+        context.clip()
+        context.drawRadialGradient(gradient, startCenter: CGPoint(x: center.x - radius * 0.35, y: center.y + radius * 0.35), startRadius: 0,
+                                   endCenter: center, endRadius: radius * 1.05, options: [.drawsAfterEndLocation])
+        context.restoreGState()
+    }
+
+    /// Bastoncino di zucchero: bianco a strisce rosse oblique.
+    private func drawCandyCane(in context: CGContext, at origin: CGPoint, size: CGFloat, tilt: CGFloat) {
+        let cane = CGMutablePath()
+        cane.move(to: CGPoint(x: 0, y: -size * 0.55))
+        cane.addLine(to: CGPoint(x: 0, y: size * 0.25))
+        cane.addArc(center: CGPoint(x: size * 0.22, y: size * 0.25), radius: size * 0.22, startAngle: .pi, endAngle: 0, clockwise: true)
+        cane.addLine(to: CGPoint(x: size * 0.44, y: size * 0.12))
+        var t = CGAffineTransform(translationX: origin.x, y: origin.y).rotated(by: tilt)
+        let placed = cane.copy(using: &t) ?? cane
+        let width = max(2.6, size * 0.17)
+        context.saveGState()
+        context.addPath(placed)
+        context.setLineWidth(width + 0.8)
+        context.setStrokeColor(NSColor(calibratedWhite: 0, alpha: 0.25).cgColor)
+        context.strokePath()
+        context.addPath(placed)
+        context.setLineWidth(width)
+        context.setStrokeColor(NSColor(calibratedWhite: 0.97, alpha: 1).cgColor)
+        context.strokePath()
+        context.addPath(placed)
+        context.setLineDash(phase: 0, lengths: [width * 0.9, width * 0.9])
+        context.setStrokeColor(NSColor(calibratedRed: 0.82, green: 0.10, blue: 0.13, alpha: 1).cgColor)
+        context.strokePath()
         context.restoreGState()
     }
 }

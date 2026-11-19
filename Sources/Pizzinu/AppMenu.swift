@@ -47,6 +47,12 @@ enum AppMenuBuilder {
         settings.target = target
         menu.addItem(settings)
 
+        let themes = NSMenuItem(title: L("Temi…"),
+                                action: #selector(AppDelegate.openThemeStore(_:)),
+                                keyEquivalent: "")
+        themes.target = target
+        menu.addItem(themes)
+
         menu.addItem(.separator())
 
         let servicesItem = NSMenuItem(title: L("Servizi"), action: nil, keyEquivalent: "")
@@ -284,6 +290,7 @@ enum AppMenuBuilder {
         menu.addItem(.separator())
 
         menu.addItem(action(title: L("Controlla aggiornamenti…"), action: #selector(AppDelegate.checkForUpdates(_:)), key: "", target: target))
+        menu.addItem(action(title: L("Temi…"), action: #selector(AppDelegate.openThemeStore(_:)), key: "", target: target))
         menu.addItem(action(title: L("Impostazioni…"), action: #selector(AppDelegate.openSettings(_:)), key: "", target: target))
         menu.addItem(action(title: L("Esci da Pizzinu"), action: #selector(NSApplication.terminate(_:)), key: "", target: nil))
 

@@ -133,10 +133,9 @@ public enum StickyGeometry {
             return LayoutInsets(top: rect.height * 0.050, left: rect.width * 0.080,
                                 bottom: rect.height * 0.050, right: rect.width * 0.100)
         case .ribbonBlue:
-            // Il testo resta nella parte rettangolare, prima della punta.
-            return LayoutInsets(top: rect.height * 0.020, left: rect.width * 0.020,
-                                bottom: rect.height * 0.020,
-                                right: ribbonTipDepth(in: rect) * 0.85)
+            // Foglietto basso: il testo usa quasi tutta la carta.
+            return LayoutInsets(top: rect.height * 0.060, left: rect.width * 0.045,
+                                bottom: rect.height * 0.040, right: rect.width * 0.045)
         case .graphPinned:
             return LayoutInsets(top: rect.height * 0.090, left: rect.width * 0.065,
                                 bottom: rect.height * 0.070, right: rect.width * 0.065)
@@ -152,6 +151,14 @@ public enum StickyGeometry {
         case .lifelike:
             return LayoutInsets(top: rect.height * 0.040, left: 4,
                                 bottom: rect.height * 0.030, right: 4)
+        case .christmas:
+            // Il testo sta sotto la ghirlanda.
+            return LayoutInsets(top: rect.height * 0.25, left: 6,
+                                bottom: rect.height * 0.030, right: 6)
+        case .ruffledReal:
+            // Il fondo increspato sale fino al 10 % dell'altezza.
+            return LayoutInsets(top: rect.height * 0.040, left: 4,
+                                bottom: rect.height * 0.090, right: 4)
         case .secretSheet:
             // Dentro la cornice e sopra lo strappo.
             return LayoutInsets(top: rect.height * 0.04, left: rect.width * 0.04,
@@ -190,9 +197,7 @@ public enum StickyGeometry {
         case .tornRuled:
             return CGPoint(x: paperRect.maxX - 22, y: paperRect.minY + 15)
         case .ribbonBlue:
-            // Angolo in basso dove finisce il rettangolo e comincia la punta.
-            return CGPoint(x: paperRect.maxX - ribbonTipDepth(in: paperRect) - 4,
-                           y: paperRect.minY + 10)
+            return CGPoint(x: paperRect.maxX - 9, y: paperRect.minY + 0.05 * paperRect.height + 8)
         case .graphPinned:
             return CGPoint(x: paperRect.maxX - 9, y: paperRect.minY + 13)
         case .ledgerTaped:
@@ -201,8 +206,10 @@ public enum StickyGeometry {
             return CGPoint(x: paperRect.maxX - 8, y: paperRect.minY + 12)
         case .clippedStack:
             return CGPoint(x: paperRect.maxX - 10, y: paperRect.minY + 13)
-        case .lifelike:
+        case .lifelike, .christmas:
             return CGPoint(x: paperRect.maxX - 9, y: paperRect.minY + max(12, 0.05 * paperRect.height + 7))
+        case .ruffledReal:
+            return CGPoint(x: paperRect.maxX - 9, y: paperRect.minY + 0.045 * paperRect.height + 9)
         case .secretSheet:
             return CGPoint(x: paperRect.maxX - 12, y: paperRect.minY + paperRect.height * secretTearFraction + 10)
         case .secretSealed:
@@ -319,7 +326,8 @@ public enum StickyGeometry {
         case .ledgerTaped: return ledgerTapedPaperPath(in: paperRect)
         case .spiralPad: return spiralPadPaperPath(in: paperRect)
         case .clippedStack: return clippedStackPaperPath(in: paperRect)
-        case .lifelike: return lifelikePaperPath(in: paperRect)
+        case .lifelike, .christmas: return lifelikePaperPath(in: paperRect)
+        case .ruffledReal: return ruffledRealPaperPath(in: paperRect)
         case .liquidGlass: return liquidGlassPaperPath(in: paperRect)
         case .secretSheet: return secretSheetPath(in: paperRect)
         case .secretSealed: return secretSealedPath(in: paperRect)
@@ -644,6 +652,64 @@ public enum StickyGeometry {
         return path
     }
 
+    /// Sagoma dell'Increspata Iperrealista: in alto quella dell'Iperrealista
+    /// (lato superiore e lati dritti), in basso il bordo ricavato dalla foto
+    /// (`RuffleRelief.bottomEdge`). `topY` sostituisce il lato superiore con
+    /// una linea a quella quota (serve per l'ombra della sola parte bassa).
+    public static func ruffledRealPaperPath(in rect: CGRect, topY: CGFloat? = nil) -> CGPath {
+        photoPaperPath(in: rect, photo: .ruffle, topY: topY)
+    }
+
+    /// Sagoma dei temi ricavati da una foto: parte alta dell'Iperrealista e
+    /// bordo inferiore della foto; se qualcosa sporge oltre i lati (il
+    /// rotolo dell'Arricciata) la sagoma lo segue fino alla sua sommità.
+    public static func photoPaperPath(in rect: CGRect, photo: PhotoPaper, topY: CGFloat? = nil) -> CGPath {
+        let edge = photo.points(photo.bottomEdge, in: rect)
+        let sheet = photo.sheetRect(in: rect)
+        let leftCap = photo.points(photo.leftCap, in: rect)
+        let rightCap = photo.points(photo.rightCap, in: rect)
+        guard let right = edge.first, let left = edge.last else { return CGPath(rect: rect, transform: nil) }
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: sheet.minX + x * sheet.width, y: sheet.minY + y * sheet.height) }
+        let start = rightCap.first.map { CGPoint(x: sheet.maxX, y: $0.y) } ?? right
+        let path = CGMutablePath()
+        if let topY {
+            path.move(to: CGPoint(x: sheet.minX, y: topY))
+            path.addLine(to: CGPoint(x: sheet.maxX, y: topY))
+            path.addLine(to: start)
+        } else {
+            path.move(to: p(0.000, 1.000))
+            path.addLine(to: p(1.000, 0.996))
+            path.addCurve(to: start, control1: p(1.002, 0.66), control2: p(0.998, 0.30))
+        }
+        for point in rightCap { path.addLine(to: point) }
+        if !rightCap.isEmpty { path.addLine(to: right) }
+        // Bordo inferiore liscio (Catmull-Rom), da destra a sinistra.
+        let n = edge.count
+        for i in 0..<(n - 1) {
+            let p0 = edge[max(0, i - 1)], p1 = edge[i], p2 = edge[i + 1], p3 = edge[min(n - 1, i + 2)]
+            path.addCurve(to: p2,
+                          control1: CGPoint(x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6),
+                          control2: CGPoint(x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6))
+        }
+        var corner = left
+        if let capEnd = leftCap.last {
+            for point in leftCap { path.addLine(to: point) }
+            corner = CGPoint(x: sheet.minX, y: capEnd.y)
+            path.addLine(to: corner)
+        }
+        if let topY {
+            path.addLine(to: CGPoint(x: sheet.minX, y: topY))
+        } else if leftCap.isEmpty {
+            path.addCurve(to: p(0.000, 1.000), control1: CGPoint(x: left.x + 0.4, y: left.y + rect.height * 0.30),
+                          control2: p(-0.002, 0.75))
+        } else {
+            path.addCurve(to: p(0.000, 1.000), control1: CGPoint(x: corner.x + 0.6, y: corner.y + rect.height * 0.30),
+                          control2: p(-0.002, 0.75))
+        }
+        path.closeSubpath()
+        return path
+    }
+
     /// Sagoma con nastro: stesso foglietto della sagoma morbida.
     public static func tapedPaperPath(in rect: CGRect) -> CGPath {
         softPaperPath(in: rect)
@@ -695,25 +761,19 @@ public enum StickyGeometry {
         min(rect.height * 0.42, rect.width * 0.25)
     }
 
-    /// Segnalibro a nastro steso in orizzontale e alto quanto la carta: parte
-    /// rettangolare (con gli angoli appena smussati) e finisce a punta sul
-    /// lato destro, come un vero segnalibro. Testo e comandi stanno tutti
-    /// nella parte rettangolare.
+    /// Segnalibro: foglietto basso e largo, appena storto come uno attaccato
+    /// a mano. Il lato in alto sale un poco verso destra, quello in basso
+    /// anche; a destra la carta si stacca dal muro e il lato si gonfia appena.
     public static func ribbonBluePath(in rect: CGRect) -> CGPath {
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + x * rect.width, y: rect.minY + y * rect.height)
+        }
         let path = CGMutablePath()
-        let tipBaseX = rect.maxX - ribbonTipDepth(in: rect)
-        let radius = min(4, rect.height * 0.03)
-
-        path.move(to: CGPoint(x: rect.minX + radius, y: rect.maxY))
-        path.addLine(to: CGPoint(x: tipBaseX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
-        path.addLine(to: CGPoint(x: tipBaseX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.minX + radius, y: rect.minY))
-        path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.minY + radius),
-                          control: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - radius))
-        path.addQuadCurve(to: CGPoint(x: rect.minX + radius, y: rect.maxY),
-                          control: CGPoint(x: rect.minX, y: rect.maxY))
+        path.move(to: p(0.020, 0.972))
+        path.addLine(to: p(0.988, 1.000))
+        path.addCurve(to: p(1.000, 0.048), control1: p(0.996, 0.680), control2: p(1.004, 0.330))
+        path.addLine(to: p(0.000, 0.000))
+        path.addLine(to: p(0.020, 0.972))
         path.closeSubpath()
         return path
     }

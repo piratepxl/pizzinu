@@ -89,6 +89,57 @@ enum DebugSnapshots {
         renderUpdateWindow(to: directory)
         renderPaperFinishes(in: directory.appendingPathComponent("carta", isDirectory: true))
         renderInks(in: directory.appendingPathComponent("inchiostro", isDirectory: true))
+        renderPhotoRelief(in: directory.appendingPathComponent("increspata", isDirectory: true))
+        renderThemeStore(to: directory)
+        renderChristmas(in: directory.appendingPathComponent("natale", isDirectory: true))
+    }
+
+    /// Nota natalizia (base Iperrealista, rossa, ghirlanda, oro).
+    static func renderChristmas(in directory: URL) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (index, text) in ["Buon Natale", "Comprare i regali\nper la nonna", ""].enumerated() {
+            var note = Note(content: text, paperShape: .christmas)
+            note.paperSize = CGSize(width: 260, height: 220)
+            render(note: note, shape: .christmas, to: directory.appendingPathComponent("natale-\(index).png"), controls: index == 2)
+        }
+    }
+
+    /// Pannello dei temi, chiaro e scuro, a tutta altezza.
+    static func renderThemeStore(to directory: URL) {
+        for dark in [false, true] {
+            let model = ThemeStoreModel(manager: nil)
+            model.previewTarget(ThemeTarget(id: UUID(), title: "Chiamare Luca", shape: .lifelike))
+            let host = NSHostingView(rootView: ThemeStoreView(model: model).frame(width: 860))
+            host.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+            let size = CGSize(width: 860, height: max(700, host.fittingSize.height))
+            let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -6000, y: -6000), size: size),
+                                  styleMask: [.borderless], backing: .buffered, defer: false)
+
+            window.isReleasedWhenClosed = false
+            window.contentView = host
+            window.orderFrontRegardless()
+            host.layoutSubtreeIfNeeded()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+            if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+                host.cacheDisplay(in: host.bounds, to: rep)
+                try? rep.representation(using: .png, properties: [:])?
+                    .write(to: directory.appendingPathComponent(dark ? "temi-scuro.png" : "temi.png"))
+            }
+            window.close()
+        }
+    }
+
+    /// Increspata Iperrealista accanto all'Iperrealista, in più colori.
+    static func renderPhotoRelief(in directory: URL) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for color in [NoteColorID.paper, .lemon, .pink, .skyBlue] {
+            var note = Note(content: "Chiamare Luca", colorID: color, paperShape: .ruffledReal)
+            note.paperSize = CGSize(width: 240, height: 210)
+            render(note: note, shape: .ruffledReal, to: directory.appendingPathComponent("increspata-\(color.rawValue).png"), controls: false)
+        }
+        var lifelike = Note(content: "Chiamare Luca", colorID: .lemon, paperShape: .lifelike)
+        lifelike.paperSize = CGSize(width: 240, height: 210)
+        render(note: lifelike, shape: .lifelike, to: directory.appendingPathComponent("iperrealista-lemon.png"), controls: false)
     }
 
     /// Colore del testo: la stessa nota con ogni inchiostro, e il selettore
@@ -108,6 +159,8 @@ enum DebugSnapshots {
             view.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
             let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: view.frame.size),
                                   styleMask: [.borderless], backing: .buffered, defer: false)
+
+            window.isReleasedWhenClosed = false
             window.contentView = view
             window.orderFrontRegardless()
             view.layoutSubtreeIfNeeded()
@@ -306,6 +359,36 @@ enum DebugSnapshots {
             let stored = try? store.note(id: blank.id)
             print("× su nota vuota → stato:", stored.map { "\($0.lifecycle) visibile=\($0.isVisible)" } ?? "eliminata")
         }
+        // Pannello dei temi: applica un tema del negozio alla nota attiva.
+        do {
+            let target = manager.createNote(kind: .text, text: "tema dal negozio")
+            manager.openWindow(for: target.id); spin()
+            manager.activeNoteID = target.id
+            let model = ThemeStoreModel(manager: manager)
+            spin(0.2)
+            if let product = ThemeCatalog.product(for: .ruffledReal) { model.apply(product) }
+            spin(1.2)
+            let stored = try? store.note(id: target.id)
+            print("negozio → tema:", stored?.paperShape?.rawValue ?? "nessuno",
+                  "ottenuti:", manager.preferences.installedThemes, "in uso:", model.target?.shape.rawValue ?? "-")
+            manager.setThemeInstalled(.ruffledReal, false)
+        }
+        // Cambio di tema ripetuto: ogni tema deve ritrovare la stessa misura.
+        do {
+            let note = manager.createNote(kind: .text, text: "giro dei temi")
+            manager.openWindow(for: note.id); spin()
+            var seen: [PaperShape: [String]] = [:]
+            for _ in 0..<2 {
+                for shape in [PaperShape.ribbonBlue, .round, .soft, .liquidGlass, .ribbonBlue, .lifelike, .round] {
+                    manager.applyTheme(shape, to: note.id); spin(0.3)
+                    if let frame = manager.windowController(for: note.id)?.panel.frame {
+                        seen[shape, default: []].append("\(Int(frame.width))×\(Int(frame.height))")
+                    }
+                }
+            }
+            let stable = seen.values.allSatisfy { Set($0).count == 1 }
+            print("cambio di tema →", stable ? "misure stabili" : "MISURE INSTABILI", seen.mapValues { Set($0).sorted() })
+        }
         let note = manager.createNote(kind: .text)
         manager.openWindow(for: note.id)
         spin()
@@ -402,6 +485,7 @@ enum DebugSnapshots {
         let size = metrics.windowSize(forPaperSize: note.paperSize)
         let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: size),
                               styleMask: [.borderless], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
         let content = NoteContentView(frame: NSRect(origin: .zero, size: size))
         window.contentView = content
         content.apply(note: note, metrics: metrics, palette: note.palette(globalMode: .realistic),
@@ -458,6 +542,8 @@ enum DebugSnapshots {
             let size = host.fittingSize
             let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: size),
                                   styleMask: [.borderless], backing: .buffered, defer: false)
+
+            window.isReleasedWhenClosed = false
             window.backgroundColor = dark ? NSColor(white: 0.17, alpha: 1) : NSColor(white: 0.97, alpha: 1)
             window.contentView = host
             window.orderFrontRegardless()
@@ -651,6 +737,7 @@ enum DebugSnapshots {
         let size = metrics.windowSize(forPaperSize: note.paperSize)
         let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -4000, y: -4000), size: size),
                               styleMask: [.borderless], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
         window.isOpaque = false
         window.backgroundColor = NSColor(calibratedWhite: 0.82, alpha: 1)
         let content = NoteContentView(frame: NSRect(origin: .zero, size: size))
