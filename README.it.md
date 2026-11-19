@@ -230,5 +230,8 @@ e le licenze dei caratteri sono in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.
 
 ## Sostieni Pizzinu
 
+⭐ **Se Pizzinu ti piace, lascia una stella a questo repository**: è il modo più semplice per farlo
+trovare ad altri utenti Mac.
+
 Pizzinu è gratuito e open source. Se ti è utile, puoi offrirmi un caffè su
 [Ko-fi](https://ko-fi.com/piratepxl) ☕

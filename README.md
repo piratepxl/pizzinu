@@ -15,6 +15,7 @@
   <a href="https://www.piratepixel.it/pizzinu/">Website</a> ·
   <a href="https://t.me/pizzinuapp">Telegram</a> ·
   <a href="https://ko-fi.com/piratepxl">Buy me a coffee ☕</a> ·
+  <a href="https://github.com/piratepxl/pizzinu/stargazers">Star it ⭐</a> ·
   🇮🇹 <a href="README.it.md">Italiano</a>
 </p>
 
@@ -196,6 +197,9 @@ small, native apps that do one thing well, are light on your Mac and respect you
 - Bugs and feature requests: [GitHub Issues](https://github.com/piratepxl/pizzinu/issues).
 
 ## Support
+
+⭐ **If you like Pizzinu, star this repository**: it is the simplest way to help other Mac users
+find it.
 
 Pizzinu is free and open source. If it makes your day a little tidier, you can
 [buy me a coffee on Ko-fi](https://ko-fi.com/piratepxl) ☕. Bug reports and ideas are welcome in
